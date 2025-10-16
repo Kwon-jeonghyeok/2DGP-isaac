@@ -1,7 +1,7 @@
 from pico2d import *
 
 from stage_1 import Stage_1
-
+from isaac import Isaac
 
 def handle_events():
     global running
@@ -14,12 +14,15 @@ def handle_events():
 
 
 def reset_world():
-    global running
-    running = True
+
     global world
+    global isaac
     world = []
     stage = Stage_1()
     world.append(stage)
+
+    isaac = Isaac()
+    world.append(isaac)
     pass
 
 
@@ -36,7 +39,7 @@ def render_world():
     update_canvas()
     pass
 
-
+running = True
 open_canvas(1000, 800)
 reset_world()
 
