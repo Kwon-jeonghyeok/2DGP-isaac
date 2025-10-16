@@ -1,18 +1,6 @@
 from pico2d import *
 
-class stage_1:
-    def __init__(self):
-        self.image = load_image('C:/Users/jhkwo/OneDrive/gitbub/2DGP-isaac/resourse/rooms/Rooms_Basement-1.png')
-
-    def update(self):
-        pass
-
-    def draw(self):
-        self.image.draw(250, 600,500,400)
-        self.image.composite_draw(0,'h',750,600,500,400)
-        self.image.composite_draw(0,'v',250,200,500,400)
-        self.image.composite_draw(0,'hv',750,200,500,400)
-        pass
+from stage_1 import Stage_1
 
 
 def handle_events():
@@ -30,13 +18,11 @@ def reset_world():
     running = True
     global world
     world = []
-    stage = stage_1()
+    stage = Stage_1()
     world.append(stage)
     pass
 
 
-open_canvas(1000, 800)
-reset_world()
 
 def update_world():
     for o in world:
@@ -49,6 +35,10 @@ def render_world():
         o.draw()
     update_canvas()
     pass
+
+
+open_canvas(1000, 800)
+reset_world()
 
 while running:
     handle_events()
