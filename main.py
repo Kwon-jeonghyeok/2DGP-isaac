@@ -11,6 +11,8 @@ def handle_events():
             running = False
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             running = False
+        else:
+            isaac.handle_event(event)
 
 
 def reset_world():
@@ -47,6 +49,6 @@ while running:
     handle_events()
     update_world()
     render_world()
-    delay(0.05)
+    delay(0.03)
 
 close_canvas()
