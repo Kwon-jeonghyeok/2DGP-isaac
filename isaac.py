@@ -1,4 +1,4 @@
-from pico2d import load_image
+from pico2d import load_image, get_time
 from sdl2 import SDL_KEYDOWN, SDLK_s, SDLK_d, SDL_KEYUP, SDLK_a, SDLK_w
 from state_machine import StateMachine
 import game_world
@@ -20,6 +20,20 @@ def down_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_s
 def down_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_s
+
+#아이작 속도
+PIXEL_PER_METER = (10.0 / 0.3)  # 10 pixel 30 cm
+RUN_SPEED_KMPH = 20.0  # Km / Hour
+RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
+RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
+RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
+
+#아이작 애니메이션 속도
+TIME_PER_ACTION = 0.5
+ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+FRAMES_PER_ACTION = 10
+
+
 
 class Idle:
     def __init__(self, isaac):
@@ -55,29 +69,29 @@ class Walk:
         pass
 
     def do(self):
-        self.isaac.frame = (self.isaac.frame + 1) % 10
+        self.isaac.frame = (self.isaac.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 10
         if self.isaac.dir == 1:
-            self.isaac.x += 5
+            self.isaac.x += RUN_SPEED_PPS * game_framework.frame_time
         elif self.isaac.dir == -1:
-            self.isaac.x -= 5
+            self.isaac.x -= RUN_SPEED_PPS * game_framework.frame_time
         elif self.isaac.dir == 2:
-            self.isaac.y += 5
+            self.isaac.y += RUN_SPEED_PPS * game_framework.frame_time
         elif self.isaac.dir == 0:
-            self.isaac.y -= 5
+            self.isaac.y -= RUN_SPEED_PPS * game_framework.frame_time
 
     def draw(self):
         if self.isaac.face_dir == 1:  # right
-            self.isaac.image.clip_draw(self.isaac.frame * 40, 850, 40, 30, self.isaac.x, self.isaac.y - 35, 90, 80)
-            self.isaac.image.clip_draw(self.isaac.frame * 40, 900, 40, 35, self.isaac.x, self.isaac.y,90,75)
+            self.isaac.image.clip_draw(int(self.isaac.frame) * 40, 850, 40, 30, self.isaac.x, self.isaac.y - 35, 90, 80)
+            self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
         elif self.isaac.face_dir == -1:  # left
-            self.isaac.image.clip_draw(self.isaac.frame * 40, 800, 40, 30, self.isaac.x, self.isaac.y - 35, 90, 80)
-            self.isaac.image.clip_draw(self.isaac.frame * 40, 750, 40, 35, self.isaac.x, self.isaac.y,90,75)
+            self.isaac.image.clip_draw(int(self.isaac.frame) * 40, 800, 40, 30, self.isaac.x, self.isaac.y - 35, 90, 80)
+            self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
         elif self.isaac.face_dir == 0:  # down
-            self.isaac.image.clip_draw(self.isaac.frame * 40, 950, 40, 30, self.isaac.x, self.isaac.y - 35, 90, 80)
-            self.isaac.image.clip_draw(self.isaac.frame * 40, 1000, 40, 35, self.isaac.x, self.isaac.y,90,75)
+            self.isaac.image.clip_draw(int(self.isaac.frame) * 40, 950, 40, 30, self.isaac.x, self.isaac.y - 35, 90, 80)
+            self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
         elif self.isaac.face_dir == 2:  # up
-            self.isaac.image.clip_draw(self.isaac.frame * 40, 700, 40, 30, self.isaac.x, self.isaac.y - 35, 90, 80)
-            self.isaac.image.clip_draw(self.isaac.frame * 40, 650, 40, 35, self.isaac.x, self.isaac.y,90,75)
+            self.isaac.image.clip_draw(int(self.isaac.frame) * 40, 700, 40, 30, self.isaac.x, self.isaac.y - 35, 90, 80)
+            self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
 
 class Isaac:
     def __init__(self):
