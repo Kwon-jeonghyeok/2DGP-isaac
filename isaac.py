@@ -1,6 +1,8 @@
 from pico2d import load_image
 from sdl2 import SDL_KEYDOWN, SDLK_s, SDLK_d, SDL_KEYUP, SDLK_a, SDLK_w
 from state_machine import StateMachine
+import game_world
+import game_framework
 
 def right_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_d
@@ -22,7 +24,6 @@ def down_up(e):
 class Idle:
     def __init__(self, isaac):
         self.isaac = isaac
-        self.frame_counter = 0
     def enter(self,e):
         self.isaac.dir = 0
 
