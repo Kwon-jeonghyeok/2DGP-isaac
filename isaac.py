@@ -4,6 +4,7 @@ from state_machine import StateMachine
 import game_world
 import game_framework
 
+
 def right_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_d
 def right_up(e):
@@ -39,7 +40,9 @@ class Idle:
     def __init__(self, isaac):
         self.isaac = isaac
     def enter(self,e):
-        self.isaac.dir = 0
+        self.isaac.x_dir = 0
+        self.isaac.y_dir = 0
+
 
     def exit(self,e):
         pass
@@ -56,28 +59,27 @@ class Walk:
     def __init__(self, isaac):
         self.isaac = isaac
     def enter(self,e):
-        if right_down(e) or left_up(e):
-            self.isaac.dir = self.isaac.face_dir =1
-        elif left_down(e) or right_up(e):
-            self.isaac.dir = self.isaac.face_dir  =-1
-        elif up_down(e) or up_up(e):
-            self.isaac.dir = self.isaac.face_dir = 2
-        elif down_down(e) or down_up(e):
-            self.isaac.dir = self.isaac.face_dir = 0
+        if right_down(e):
+           self.isaac.x_dir = self.isaac.face_dir =1
+        if left_down(e) :
+            self.isaac.x_dir = self.isaac.face_dir  =-1
+        if up_down(e):
+           self.isaac.face_dir = 2
+           self.isaac.y_dir = 1
+        if down_down(e):
+            self.isaac.face_dir = 0
+            self.isaac.y_dir = -1
+
+
 
     def exit(self,e):
         pass
 
     def do(self):
         self.isaac.frame = (self.isaac.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 10
-        if self.isaac.dir == 1:
-            self.isaac.x += RUN_SPEED_PPS * game_framework.frame_time
-        elif self.isaac.dir == -1:
-            self.isaac.x -= RUN_SPEED_PPS * game_framework.frame_time
-        elif self.isaac.dir == 2:
-            self.isaac.y += RUN_SPEED_PPS * game_framework.frame_time
-        elif self.isaac.dir == 0:
-            self.isaac.y -= RUN_SPEED_PPS * game_framework.frame_time
+        self.isaac.x += self.isaac.x_dir * RUN_SPEED_PPS * game_framework.frame_time
+        self.isaac.y += self.isaac.y_dir * RUN_SPEED_PPS * game_framework.frame_time
+
 
     def draw(self):
         if self.isaac.face_dir == 1:  # right
@@ -99,6 +101,8 @@ class Isaac:
         self.frame = 0
         self.dir = 0
         self.face_dir = 1
+        self.x_dir = 0
+        self.y_dir = 0
         #1 은 오른쪽 -1 은 왼쪽 0 은 아래 2는 위
         self.image = load_image('C:/Users/jhkwo/OneDrive/gitbub/2DGP-isaac/resourse/isaac.png')
 
@@ -108,9 +112,9 @@ class Isaac:
             self.IDLE,
             {
                 self.IDLE: {right_down: self.WALK, left_down: self.WALK, up_down: self.WALK, down_down: self.WALK
-                            , right_up: self.IDLE, left_up: self.IDLE, up_up: self.IDLE, down_up: self.IDLE},
+                            , right_up: self.WALK, left_up: self.WALK, up_up: self.WALK, down_up: self.WALK},
                 self.WALK:{right_up: self.IDLE , left_up: self.IDLE, up_up: self.IDLE, down_up: self.IDLE,
-                           right_down: self.WALK, left_down: self.WALK, up_down: self.WALK, down_down: self.WALK}
+                           right_down: self.IDLE, left_down: self.IDLE, up_down: self.IDLE, down_down: self.IDLE}
             }
         )
 
