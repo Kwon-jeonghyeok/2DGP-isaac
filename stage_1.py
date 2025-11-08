@@ -3,7 +3,7 @@ from pico2d import load_image
 
 class Stage_1:
     def __init__(self):
-        self.image = load_image('C:/Users/jhkwo/OneDrive/gitbub/2DGP-isaac/resourse/rooms/Rooms_Basement-1.png')
+        self.image = load_image('resourse/rooms/Rooms_Basement-1.png')
 
     def update(self):
         pass

@@ -104,7 +104,7 @@ class Isaac:
         self.x_dir = 0
         self.y_dir = 0
         #1 은 오른쪽 -1 은 왼쪽 0 은 아래 2는 위
-        self.image = load_image('C:/Users/jhkwo/OneDrive/gitbub/2DGP-isaac/resourse/isaac.png')
+        self.image = load_image('resourse/isaac.png')
 
         self.IDLE = Idle(self)
         self.WALK = Walk(self)
