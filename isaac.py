@@ -55,31 +55,52 @@ class Idle:
         self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y,90,75)
 
 
+# python
 class Walk:
     def __init__(self, isaac):
         self.isaac = isaac
-    def enter(self,e):
-        if right_down(e):
-           self.isaac.x_dir = self.isaac.face_dir =1
-        if left_down(e) :
-            self.isaac.x_dir = self.isaac.face_dir  =-1
-        if up_down(e):
-           self.isaac.face_dir = 2
-           self.isaac.y_dir = 1
-        if down_down(e):
-            self.isaac.face_dir = 0
+
+    def update_direction(self):
+        keys = self.isaac.pressed_keys
+        last = getattr(self.isaac, 'last_key', None)
+
+        # 수평
+        if 'left' in keys and 'right' in keys:
+            self.isaac.x_dir = -1 if last == 'left' else 1
+        elif 'left' in keys:
+            self.isaac.x_dir = -1
+        elif 'right' in keys:
+            self.isaac.x_dir = 1
+        else:
+            self.isaac.x_dir = 0
+
+        # 수직
+        if 'up' in keys and 'down' in keys:
+            self.isaac.y_dir = 1 if last == 'up' else -1
+        elif 'up' in keys:
+            self.isaac.y_dir = 1
+        elif 'down' in keys:
             self.isaac.y_dir = -1
+        else:
+            self.isaac.y_dir = 0
 
+        # face_dir 결정: 수평 우선, 없으면 수직
+        if self.isaac.x_dir != 0:
+            self.isaac.face_dir = 1 if self.isaac.x_dir > 0 else -1
+        elif self.isaac.y_dir != 0:
+            self.isaac.face_dir = 2 if self.isaac.y_dir > 0 else 0
 
+    def enter(self, e):
+        self.update_direction()
 
-    def exit(self,e):
+    def exit(self, e):
         pass
 
     def do(self):
+        self.update_direction()
         self.isaac.frame = (self.isaac.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 10
         self.isaac.x += self.isaac.x_dir * RUN_SPEED_PPS * game_framework.frame_time
         self.isaac.y += self.isaac.y_dir * RUN_SPEED_PPS * game_framework.frame_time
-
 
     def draw(self):
         if self.isaac.face_dir == 1:  # right
@@ -97,24 +118,34 @@ class Walk:
 
 class Isaac:
     def __init__(self):
-        self.x, self.y = 500,400
+        self.x, self.y = 500, 400
+        self.keydown = 0
+        self.pressed_keys = set()
+        self.last_key = None
         self.frame = 0
         self.dir = 0
         self.face_dir = 1
         self.x_dir = 0
         self.y_dir = 0
-        #1 은 오른쪽 -1 은 왼쪽 0 은 아래 2는 위
+
         self.image = load_image('resourse/isaac.png')
 
         self.IDLE = Idle(self)
         self.WALK = Walk(self)
+
+        keys_tuple = (SDLK_a, SDLK_d, SDLK_w, SDLK_s)
+
+        def any_keydown(e):
+            return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key in keys_tuple
+
+        def to_idle_when_no_keys(e):
+            return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and self.keydown == 0
+
         self.state_machine = StateMachine(
             self.IDLE,
             {
-                self.IDLE: {right_down: self.WALK, left_down: self.WALK, up_down: self.WALK, down_down: self.WALK
-                            , right_up: self.WALK, left_up: self.WALK, up_up: self.WALK, down_up: self.WALK},
-                self.WALK:{right_up: self.IDLE , left_up: self.IDLE, up_up: self.IDLE, down_up: self.IDLE,
-                           right_down: self.IDLE, left_down: self.IDLE, up_down: self.IDLE, down_down: self.IDLE}
+                self.IDLE: {right_down: self.WALK, left_down: self.WALK, up_down: self.WALK, down_down: self.WALK},
+                self.WALK: {to_idle_when_no_keys: self.IDLE}
             }
         )
 
@@ -123,5 +154,33 @@ class Isaac:
 
     def draw(self):
         self.state_machine.draw()
-    def handle_event(self,event):
+
+    def handle_event(self, event):
+
+        keymap = {
+            SDLK_a: 'left',
+            SDLK_d: 'right',
+            SDLK_w: 'up',
+            SDLK_s: 'down'
+        }
+
+
+        if event.type == SDL_KEYDOWN and event.key in keymap:
+            kn = keymap[event.key]
+            if kn not in self.pressed_keys:
+                self.pressed_keys.add(kn)
+                self.keydown += 1
+            self.last_key = kn
+
+        elif event.type == SDL_KEYUP and event.key in keymap:
+            kn = keymap[event.key]
+            if kn in self.pressed_keys:
+                self.pressed_keys.remove(kn)
+                self.keydown = max(0, self.keydown - 1)
+            if self.last_key == kn:
+                if self.pressed_keys:
+                    self.last_key = next(iter(self.pressed_keys))
+                else:
+                    self.last_key = None
+
         self.state_machine.handle_state_event(('INPUT', event))
