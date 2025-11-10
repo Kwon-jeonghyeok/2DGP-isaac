@@ -146,8 +146,8 @@ class Isaac:
         self.state_machine = StateMachine(
             self.IDLE,
             {
-                self.IDLE: {right_down: self.WALK, left_down: self.WALK, up_down: self.WALK, down_down: self.WALK},
-                self.WALK: {to_idle_when_no_keys: self.IDLE}
+                self.IDLE: {space_down: self.IDLE, right_down: self.WALK, left_down: self.WALK, up_down: self.WALK, down_down: self.WALK},
+                self.WALK: {space_down: self.WALK, to_idle_when_no_keys: self.IDLE}
             }
         )
 
