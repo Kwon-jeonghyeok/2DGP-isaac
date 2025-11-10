@@ -30,7 +30,7 @@ RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
 
 #아이작 애니메이션 속도
-TIME_PER_ACTION = 0.5
+TIME_PER_ACTION = 1.0
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 10
 
@@ -50,7 +50,7 @@ class Idle:
         pass
     def draw(self):
         # 몸통
-        self.isaac.image.clip_draw(0, 850, 40, 30, self.isaac.x, self.isaac.y - 35, 90, 80)
+        self.isaac.image.clip_draw(0, 850, 40, 30, self.isaac.x, self.isaac.y - 35, 80, 60)
         #머리
         self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y,90,75)
 
@@ -104,17 +104,15 @@ class Walk:
 
     def draw(self):
         if self.isaac.face_dir == 1:  # right
-            self.isaac.image.clip_draw(int(self.isaac.frame) * 40, 850, 40, 30, self.isaac.x, self.isaac.y - 35, 90, 80)
+            self.isaac.image.clip_draw(int(self.isaac.frame) * 32 , 810, 40, 26, self.isaac.x, self.isaac.y - 35, 80, 52)
             self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
         elif self.isaac.face_dir == -1:  # left
-            self.isaac.image.clip_draw(int(self.isaac.frame) * 40, 800, 40, 30, self.isaac.x, self.isaac.y - 35, 90, 80)
+            self.isaac.image.clip_composite_draw(int(self.isaac.frame) * 32, 810, 40, 26,0,'h', self.isaac.x+14, self.isaac.y - 35, 80, 52)
             self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
-        elif self.isaac.face_dir == 0:  # down
-            self.isaac.image.clip_draw(int(self.isaac.frame) * 40, 950, 40, 30, self.isaac.x, self.isaac.y - 35, 90, 80)
+        elif self.isaac.face_dir == 0 or self.isaac.face_dir == 2:  #위 아래 애니메이션 동일
+            self.isaac.image.clip_draw(int(self.isaac.frame) * 32 , 853, 40, 26, self.isaac.x, self.isaac.y - 35, 80, 52)
             self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
-        elif self.isaac.face_dir == 2:  # up
-            self.isaac.image.clip_draw(int(self.isaac.frame) * 40, 700, 40, 30, self.isaac.x, self.isaac.y - 35, 90, 80)
-            self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
+
 
 class Isaac:
     def __init__(self):
