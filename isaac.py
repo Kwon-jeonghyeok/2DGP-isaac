@@ -1,8 +1,9 @@
 from pico2d import load_image, get_time
-from sdl2 import SDL_KEYDOWN, SDLK_s, SDLK_d, SDL_KEYUP, SDLK_a, SDLK_w
+from sdl2 import SDL_KEYDOWN, SDLK_s, SDLK_d, SDL_KEYUP, SDLK_a, SDLK_w, SDLK_SPACE
 from state_machine import StateMachine
 import game_world
 import game_framework
+from tear import Tear
 
 
 def right_down(e):
@@ -21,6 +22,9 @@ def down_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_s
 def down_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_s
+def space_down(e):
+    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_SPACE
+
 
 #아이작 속도
 PIXEL_PER_METER = (10.0 / 0.3)  # 10 pixel 30 cm
@@ -43,9 +47,9 @@ class Idle:
         self.isaac.x_dir = 0
         self.isaac.y_dir = 0
 
-
-    def exit(self,e):
-        pass
+    def exit(self, e):
+        if space_down(e):
+            self.isaac.fire_tear()
     def do(self):
         pass
     def draw(self):
@@ -55,7 +59,6 @@ class Idle:
         self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y,90,75)
 
 
-# python
 class Walk:
     def __init__(self, isaac):
         self.isaac = isaac
@@ -94,7 +97,8 @@ class Walk:
         self.update_direction()
 
     def exit(self, e):
-        pass
+        if space_down(e):
+            self.isaac.fire_tear()
 
     def do(self):
         self.update_direction()
@@ -152,6 +156,11 @@ class Isaac:
 
     def draw(self):
         self.state_machine.draw()
+
+    def fire_tear(self):
+        tear = Tear(self.x, self.y, self.face_dir*10)
+        game_world.add_object(tear,1)
+
 
     def handle_event(self, event):
 
