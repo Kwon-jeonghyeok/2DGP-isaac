@@ -130,7 +130,7 @@ class Isaac:
         self.x_dir = 0
         self.y_dir = 0
 
-        self.image = load_image('resourse/isaac.png')
+        self.image = load_image('resource/isaac.png')
 
         self.IDLE = Idle(self)
         self.WALK = Walk(self)
@@ -158,7 +158,7 @@ class Isaac:
         self.state_machine.draw()
 
     def fire_tear(self):
-        tear = Tear(self.x, self.y, self.face_dir*10)
+        tear = Tear(self.x, self.y, self.face_dir)
         game_world.add_object(tear,1)
 
 
