@@ -6,7 +6,7 @@ PIXEL_PER_METER = (1.0 / 0.015)
 
 TIME_PER_ACTION = 1.0
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
-FRAMES_PER_ACTION = 10
+FRAMES_PER_ACTION = 4
 class Tear:
     image = None
     def __init__(self, x=400, y=300, face_dir=1 ):
@@ -16,10 +16,11 @@ class Tear:
         self.frame = 0
 
     def draw(self):
-        self.image.clip_draw(int(self.frame)*32 + 300,215, 45, 40, self.x, self.y, 60, 60)
+        self.image.clip_draw(280, 215, 30, 30, self.x, self.y, 40, 40)
+        #self.image.clip_draw(int(self.frame)*32 + 300,215, 32, 30, self.x, self.y, 45, 45)
 
     def update(self):
-        self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 8
+        self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 4
 
         if self.dir == 1:
             self.x +=  PIXEL_PER_METER * ACTION_PER_TIME * game_framework.frame_time * 5
