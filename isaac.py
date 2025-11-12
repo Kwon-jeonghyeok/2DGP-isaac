@@ -130,6 +130,10 @@ class Isaac:
         self.x_dir = 0
         self.y_dir = 0
 
+
+        self.tear_reload = 0.5  # 재장전 시간(초)
+        self.tear_cooldown = 0.0  # 남은 쿨다운(초)
+
         self.image = load_image('resource/isaac.png')
 
         self.IDLE = Idle(self)
@@ -153,13 +157,18 @@ class Isaac:
 
     def update(self):
         self.state_machine.update()
+        if self.tear_cooldown > 0.0:
+            self.tear_cooldown = max(0.0, self.tear_cooldown - game_framework.frame_time)
 
     def draw(self):
         self.state_machine.draw()
 
     def fire_tear(self):
-        tear = Tear(self.x, self.y, self.face_dir)
-        game_world.add_object(tear,1)
+        if self.tear_cooldown <= 0.0:
+            tear = Tear(self.x, self.y, self.face_dir)
+            game_world.add_object(tear, 1)
+            self.tear_cooldown = self.tear_reload
+
 
 
     def handle_event(self, event):
