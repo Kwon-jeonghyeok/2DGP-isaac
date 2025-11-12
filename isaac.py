@@ -148,7 +148,7 @@ class Isaac:
         self.half_width = 45
         self.half_height = 37
 
-        self.notch_width = 200
+        self.notch_width = 150
         self.notch_height = 40
 
         keys_tuple = (SDLK_a, SDLK_d, SDLK_w, SDLK_s)
