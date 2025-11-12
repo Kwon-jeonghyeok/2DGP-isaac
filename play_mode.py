@@ -40,7 +40,7 @@ def update():
     global Stage
     global stage
     global isaac
-    if isaac.y > 720 and Stage ==1:
+    if isaac.y > 740 and Stage ==1:
         game_world.remove_object(stage)
         stage = Stage_2()
         game_world.add_object(stage,0)
