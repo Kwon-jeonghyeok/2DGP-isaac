@@ -139,6 +139,18 @@ class Isaac:
         self.IDLE = Idle(self)
         self.WALK = Walk(self)
 
+        # 맵 전체 경계
+        self.map_left = 50
+        self.map_right = 950
+        self.map_bottom = 150
+        self.map_top = 750
+
+        self.half_width = 45
+        self.half_height = 37
+
+        self.notch_width = 200
+        self.notch_height = 40
+
         keys_tuple = (SDLK_a, SDLK_d, SDLK_w, SDLK_s)
 
         def any_keydown(e):
@@ -159,6 +171,32 @@ class Isaac:
         self.state_machine.update()
         if self.tear_cooldown > 0.0:
             self.tear_cooldown = max(0.0, self.tear_cooldown - game_framework.frame_time)
+        # 경계 처리
+        # 기본 맵 사각형 내부로 클램프(노치 포함 시 조건부로 Y 허용 범위 확장)
+        min_x = self.map_left + self.half_width
+        max_x = self.map_right - self.half_width
+        min_y = self.map_bottom + self.half_height
+
+        # 기본 상단 한계 (노치가 없을 때)
+        default_max_y = self.map_top - self.half_height
+
+        # 노치의 가로 범위 계산(중앙 정렬)
+        notch_left = (self.map_left + self.map_right) / 2 - self.notch_width / 2
+        notch_right = notch_left + self.notch_width
+
+        # 노치가 위로 확장되어 있다면 노치 상단까지 허용
+        notch_top = self.map_top + self.notch_height
+        notch_max_y = notch_top - self.half_height
+
+        # 플레이어의 중심 x가 노치 가로 범위에 들어오면 상단 한계를 노치 상단까지 확장
+        if (self.x > notch_left + self.half_width) and (self.x < notch_right - self.half_width):
+            max_y = max(default_max_y, notch_max_y)
+        else:
+            max_y = default_max_y
+
+        # 최종 클램프
+        self.x = max(min_x, min(self.x, max_x))
+        self.y = max(min_y, min(self.y, max_y))
 
     def draw(self):
         self.state_machine.draw()
