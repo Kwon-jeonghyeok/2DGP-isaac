@@ -194,9 +194,13 @@ class Isaac:
         else:
             max_y = default_max_y
 
+
         # 최종 클램프
         self.x = max(min_x, min(self.x, max_x))
         self.y = max(min_y, min(self.y, max_y))
+        if self.y > 720:
+            game_world.Stage =2
+
 
     def draw(self):
         self.state_machine.draw()

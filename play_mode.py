@@ -3,11 +3,14 @@ import game_framework
 import game_world
 import title_mode
 
+
 from isaac import Isaac
 from stage_1 import Stage_1
+from stage_2 import Stage_2
 
 isaac =None
-
+stage = None
+Stage = 1
 def handle_events():
     event_list = get_events()
     for event in event_list:
@@ -21,17 +24,29 @@ def handle_events():
                 isaac.handle_event(event)
 
 def init():
+    global isaac
+    global stage
 
     stage = Stage_1()
     game_world.add_object(stage,0)
 
-    global isaac
+
     isaac = Isaac()
     game_world.add_object(isaac,1)
 
 
 def update():
     game_world.update()
+    global Stage
+    global stage
+    global isaac
+    if isaac.y > 720 and Stage ==1:
+        game_world.remove_object(stage)
+        stage = Stage_2()
+        game_world.add_object(stage,0)
+        isaac.y = 70
+
+
     pass
 
 def draw():
