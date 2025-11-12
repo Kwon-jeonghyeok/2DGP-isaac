@@ -1,6 +1,7 @@
 from pico2d import *
 import game_framework
 import game_world
+import title_mode
 
 from isaac import Isaac
 from stage_1 import Stage_1
@@ -13,9 +14,11 @@ def handle_events():
         if event.type == SDL_QUIT:
             game_framework.quit()
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
-            game_framework.quit()
+            game_framework.change_mode(title_mode)
         else:
-            isaac.handle_event(event)
+            # isaac이 아직 생성되지 않았을 수 있으므로 안전 검사
+            if isaac is not None:
+                isaac.handle_event(event)
 
 def init():
 
