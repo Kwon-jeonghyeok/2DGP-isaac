@@ -1,4 +1,4 @@
-from pico2d import load_image, get_time
+from pico2d import load_image, get_time , draw_rectangle
 from sdl2 import SDL_KEYDOWN, SDLK_s, SDLK_d, SDL_KEYUP, SDLK_a, SDLK_w, SDLK_SPACE
 from state_machine import StateMachine
 import game_world
@@ -198,11 +198,14 @@ class Isaac:
         # 최종 클램프
         self.x = max(min_x, min(self.x, max_x))
         self.y = max(min_y, min(self.y, max_y))
+    def get_bb(self):
+        return self.x - 30, self.y - 55, self.x + 45, self.y + 20
 
 
 
     def draw(self):
         self.state_machine.draw()
+        draw_rectangle(*self.get_bb())
 
     def fire_tear(self):
         if self.tear_cooldown <= 0.0:
@@ -241,3 +244,8 @@ class Isaac:
                     self.last_key = None
 
         self.state_machine.handle_state_event(('INPUT', event))
+
+    def handle_collision(self, group, other):
+
+            pass
+
