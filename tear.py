@@ -34,6 +34,7 @@ class Tear:
 
             self.image.clip_draw(280, 215, 30, 30, self.x, self.y, 40, 40)
             # self.image.clip_draw(int(self.frame) * 32 + 300, 215, 32, 30, self.x, self.y, 45, 45)
+            draw_rectangle(*self.get_bb())
         else:
             # 폭발 애니메이션: 총 8프레임
             frame_index = int(self.explosion_frame)
@@ -46,6 +47,7 @@ class Tear:
             src_y_row1 = src_y_row0 - (frame_h*2)  # 아래로 이동한 행
             src_y = src_y_row0 if frame_index < 4 else src_y_row1
             self.image.clip_draw(src_x, src_y, frame_w, frame_h, self.x, self.y, 40, 40)
+            draw_rectangle(*self.get_bb())
 
     def update(self):
         # 이동 중일 때
@@ -87,3 +89,9 @@ class Tear:
             # 애니메이션이 끝나면 객체 제거
             if int(self.explosion_frame) >= self.EXPLOSION_FRAMES:
                 game_world.remove_object(self)
+
+    def get_bb(self):
+        return self.x - 22, self.y - 16, self.x + 4, self.y + 6
+
+    def handle_collision(self, group, other):
+        pass
