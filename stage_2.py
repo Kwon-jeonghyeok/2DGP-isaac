@@ -11,6 +11,11 @@ class Stage_2:
             'map_right': 875,
             'map_bottom': 175,
             'map_top': 700,
+            'notches': [
+
+                {'x': 875, 'y': 400, 'w': 50, 'h': 70},
+                {'x': 490, 'y': 175, 'w': 50, 'h': 50},
+            ]
         }
 
 

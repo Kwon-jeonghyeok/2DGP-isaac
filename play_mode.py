@@ -64,7 +64,19 @@ def update():
         game_world.add_object(stage, 0)
         stage_index = 2
         # 플레이어 재배치
-        isaac.y = 70
+        isaac.y = 175
+
+    if isaac.y < 125 and stage_index == 2:
+        # 기존 스테이지 제거 및 새 스테이지 추가
+        try:
+            game_world.remove_object(stage)
+        except ValueError:
+            pass
+        stage = Stage_1()
+        game_world.add_object(stage, 0)
+        stage_index = 1
+        # 플레이어 재배치
+        isaac.y = 700
 
     pass
 
