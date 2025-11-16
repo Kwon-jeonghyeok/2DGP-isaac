@@ -10,7 +10,7 @@ from stage_2 import Stage_2
 
 isaac =None
 stage = None
-Stage = 1
+stage_index = 1
 def handle_events():
     event_list = get_events()
     for event in event_list:
@@ -24,8 +24,7 @@ def handle_events():
                 isaac.handle_event(event)
 
 def init():
-    global isaac
-    global stage
+    global isaac, stage, stage_index
 
     stage = Stage_1()
     game_world.add_object(stage,0)
@@ -33,19 +32,39 @@ def init():
 
     isaac = Isaac()
     game_world.add_object(isaac,1)
-
+    stage_index = 1
 
 def update():
-    game_world.update()
-    global Stage
-    global stage
-    global isaac
-    if isaac.y > 740 and Stage ==1:
-        game_world.remove_object(stage)
-        stage = Stage_2()
-        game_world.add_object(stage,0)
-        isaac.y = 70
+    global stage, stage_index, isaac
 
+    # 안전 검사
+    if isaac is None or stage is None:
+        return
+
+    # 모든 객체 업데이트
+    game_world.update()
+
+    # 맵 경계 적용
+    bounds = stage.get_map_bounds()
+    isaac.apply_map_bounds(bounds)
+
+    # 충돌 처리
+    game_world.handle_collision()
+
+
+
+    # 스테이지 전환
+    if isaac.y > 750 and stage_index == 1:
+        # 기존 스테이지 제거 및 새 스테이지 추가
+        try:
+            game_world.remove_object(stage)
+        except ValueError:
+            pass
+        stage = Stage_2()
+        game_world.add_object(stage, 0)
+        stage_index = 2
+        # 플레이어 재배치
+        isaac.y = 70
 
     pass
 

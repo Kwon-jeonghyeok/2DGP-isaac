@@ -5,6 +5,14 @@ class Stage_2:
     def __init__(self):
         self.image = load_image('resource/rooms/Rooms_Basement-1.png')
 
+    def get_map_bounds(self):
+        return {
+            'map_left': 100,
+            'map_right': 875,
+            'map_bottom': 175,
+            'map_top': 700,
+        }
+
 
     def update(self):
         pass

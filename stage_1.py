@@ -6,6 +6,19 @@ class Stage_1:
         self.image = load_image('resource/rooms/Rooms_Basement-1.png')
         self.image1 = load_image('resource/rooms/Rooms_Basement_2.png')
         self.image2 = load_image('resource/objects/Door_1.png')
+    def get_map_bounds(self):
+        return {
+            'map_left': 100,
+            'map_right': 875,
+            'map_bottom': 175,
+            'map_top': 700,
+            'notches': [
+                # 상단 중앙에 작은 노치 (위쪽 통로)
+                {'x': 490, 'y': 700, 'w': 50, 'h': 50},
+                # 좌측 중간에 작은 노치 (왼쪽 통로)
+                {'x': 100, 'y': 400, 'w': 50, 'h': 70},
+            ]
+        }
 
     def update(self):
         pass

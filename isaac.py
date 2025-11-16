@@ -171,33 +171,59 @@ class Isaac:
         self.state_machine.update()
         if self.tear_cooldown > 0.0:
             self.tear_cooldown = max(0.0, self.tear_cooldown - game_framework.frame_time)
-        # 경계 처리
-        # 기본 맵 사각형 내부로 클램프(노치 포함 시 조건부로 Y 허용 범위 확장)
-        min_x = self.map_left + self.half_width
-        max_x = self.map_right - self.half_width
-        min_y = self.map_bottom + self.half_height
-
-        # 기본 상단 한계 (노치가 없을 때)
-        default_max_y = self.map_top - self.half_height
-
-        # 노치의 가로 범위 계산(중앙 정렬)
-        notch_left = (self.map_left + self.map_right) / 2 - self.notch_width / 2
-        notch_right = notch_left + self.notch_width
-
-        # 노치가 위로 확장되어 있다면 노치 상단까지 허용
-        notch_top = self.map_top + self.notch_height
-        notch_max_y = notch_top - self.half_height
-
-        # 플레이어의 중심 x가 노치 가로 범위에 들어오면 상단 한계를 노치 상단까지 확장
-        if (self.x > notch_left + self.half_width) and (self.x < notch_right - self.half_width):
-            max_y = max(default_max_y, notch_max_y)
-        else:
-            max_y = default_max_y
 
 
-        # 최종 클램프
-        self.x = max(min_x, min(self.x, max_x))
-        self.y = max(min_y, min(self.y, max_y))
+    def apply_map_bounds(self, bounds):
+        left = bounds.get('map_left', -1e9)
+        right = bounds.get('map_right', 1e9)
+        bottom = bounds.get('map_bottom', -1e9)
+        top = bounds.get('map_top', 1e9)
+
+        # 기본적으로 모든 가장자리를 막음(허용=False)
+        allow_left = allow_right = allow_top = allow_bottom = False
+
+        # 플레이어의 기준점으로 중심
+        px, py = self.x, self.y
+
+        # 노치가 명시되어 있으면 검사
+        for n in bounds.get('notches', []):
+            nx = n.get('x', 0)
+            ny = n.get('y', 0)
+            nw = n.get('w', 0)
+            nh = n.get('h', 0)
+            nx1 = nx - nw / 2.0
+            nx2 = nx + nw / 2.0
+            ny1 = ny - nh / 2.0
+            ny2 = ny + nh / 2.0
+
+            # 노치가 맵의 특정 가장자리에 닿아 있는지로 판단
+            # top 노치: 노치 상단/하단 범위가 top에 접해 있고 플레이어 x가 노치 내에 있으면 통과 허용
+            if ny1 <= top <= ny2:
+                if nx1 <= px <= nx2:
+                    allow_top = True
+            # bottom 노치
+            if ny1 <= bottom <= ny2:
+                if nx1 <= px <= nx2:
+                    allow_bottom = True
+            # left 노치
+            if nx1 <= left <= nx2:
+                if ny1 <= py <= ny2:
+                    allow_left = True
+            # right 노치
+            if nx1 <= right <= nx2:
+                if ny1 <= py <= ny2:
+                    allow_right = True
+
+        # 노치로 허용되지 않은 가장자리들은 위치를 클램프
+        if not allow_left and px < left:
+            self.x = left
+        if not allow_right and px > right:
+            self.x = right
+        if not allow_bottom and py < bottom:
+            self.y = bottom
+        if not allow_top and py > top:
+            self.y = top
+
     def get_bb(self):
         return self.x - 30, self.y - 55, self.x + 45, self.y + 20
 
