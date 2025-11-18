@@ -71,7 +71,7 @@ def update():
             game_world.add_object(h,1)
         # 플레이어 재배치
         isaac.y = 175
-        isaac.take_damage(1)  # 체력 감소 예시
+        #isaac.take_damage(1)  # 체력 감소 예시
 
 
 
