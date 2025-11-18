@@ -129,6 +129,8 @@ class Isaac:
         self.face_dir = 1
         self.x_dir = 0
         self.y_dir = 0
+        self.max_hp = 10
+        self.hearts_image = load_image('resource/UI_Hearts.png')
 
 
         self.tear_reload = 0.5  # 재장전 시간(초)
@@ -231,6 +233,7 @@ class Isaac:
 
     def draw(self):
         self.state_machine.draw()
+        self.draw_hp()
         draw_rectangle(*self.get_bb())
 
     def fire_tear(self):
@@ -239,6 +242,28 @@ class Isaac:
             game_world.add_object(tear, 1)
             self.tear_cooldown = self.tear_reload
 
+    def draw_hp(self):
+        total_hearts = 5
+        hp = max(0,min(self.max_hp, self.max_hp))
+        cols = 3
+        frame_w = int(self.hearts_image.w // cols)
+        frame_h = int(self.hearts_image.h)
+
+        start_x = 80
+        start_y = 720
+
+        spacing = frame_w // 6
+        scale = 2
+
+        for i in range(total_hearts):
+            heart_hp = max(0,min(2, hp - i * 2))
+            frame_idx = 2 - heart_hp
+            sx = frame_idx * frame_w
+            dx = start_x + i * (frame_w * scale + spacing)
+            self.hearts_image.clip_draw(sx, 0, frame_w, frame_h, dx, start_y, frame_w * scale, frame_h * scale)
+
+    def change_hp(self, delta):
+        self.hp = max(0, min(self.max_hp, self.hp + delta))
 
 
     def handle_event(self, event):
