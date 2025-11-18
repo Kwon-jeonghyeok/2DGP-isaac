@@ -1,0 +1,30 @@
+import game_framework
+import game_world
+import random
+
+from pico2d import *
+
+TIME_PER_ACTION = 0.5
+ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+FRAMES_PER_ACTION = 10.0
+
+class Host:
+    image = None
+    def __init__(self):
+        if Host.image == None:
+            Host.image = load_image("resource/monster/Host.png")
+        self.x, self.y = random.randint(180, 820), random.randint(150, 650)
+        self.frame = 0.0
+
+
+    def get_bb(self):
+        return self.x - 35, self.y - 75, self.x + 35, self.y
+
+    def update(self):
+        pass
+    def draw(self):
+        self.image.clip_draw(0, 0, 32, 60, self.x, self.y, 70, 150)
+        draw_rectangle(*self.get_bb())
+
+    def handle_collision(self, group, other):
+        pass

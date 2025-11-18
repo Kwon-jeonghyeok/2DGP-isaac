@@ -7,9 +7,10 @@ import title_mode
 from isaac import Isaac
 from stage_1 import Stage_1
 from stage_2 import Stage_2
-
+from host import Host
 isaac =None
 stage = None
+host = None
 stage_index = 1
 def handle_events():
     event_list = get_events()
@@ -24,18 +25,19 @@ def handle_events():
                 isaac.handle_event(event)
 
 def init():
-    global isaac, stage, stage_index
+    global isaac, stage, stage_index, host
 
     stage = Stage_1()
     game_world.add_object(stage,0)
 
-
+    #host = Host()
+    host = [Host() for i in range(5)]
     isaac = Isaac()
     game_world.add_object(isaac,1)
     stage_index = 1
 
 def update():
-    global stage, stage_index, isaac
+    global stage, stage_index, isaac, host
 
     # 안전 검사
     if isaac is None or stage is None:
@@ -63,13 +65,21 @@ def update():
         stage = Stage_2()
         game_world.add_object(stage, 0)
         stage_index = 2
+
+
+        for h in host:
+            game_world.add_object(h,1)
         # 플레이어 재배치
         isaac.y = 175
+
+
 
     if isaac.y < 125 and stage_index == 2:
         # 기존 스테이지 제거 및 새 스테이지 추가
         try:
             game_world.remove_object(stage)
+            for h in host:
+                game_world.remove_object(h)
         except ValueError:
             pass
         stage = Stage_1()
