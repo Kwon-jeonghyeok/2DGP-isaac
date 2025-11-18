@@ -130,6 +130,7 @@ class Isaac:
         self.x_dir = 0
         self.y_dir = 0
         self.max_hp = 10
+        self.hp = self.max_hp
         self.hearts_image = load_image('resource/UI_Hearts.png')
 
 
@@ -244,7 +245,7 @@ class Isaac:
 
     def draw_hp(self):
         total_hearts = 5
-        hp = max(0,min(self.max_hp, self.max_hp))
+        hp = max(0,min(self.max_hp, self.hp))
         cols = 3
         frame_w = int(self.hearts_image.w // cols)
         frame_h = int(self.hearts_image.h)
@@ -263,8 +264,23 @@ class Isaac:
             self.hearts_image.clip_draw(sx, 0, frame_w, frame_h, dx, start_y, frame_w * scale, frame_h * scale)
 
     def change_hp(self, delta):
-        self.hp = max(0, min(self.max_hp, self.hp + delta))
+        old = getattr(self, 'hp', 0)
+        self.hp = max(0, min(self.max_hp, old + delta))
+        # 죽음 처리 필요 시(예: if self.hp == 0: self.on_death())
+        return self.hp
 
+    def set_hp(self, value):
+        self.hp = max(0, min(self.max_hp, int(value)))
+        return self.hp
+
+    def take_damage(self, amount):
+        return self.change_hp(-abs(int(amount)))
+
+    def heal(self, amount):
+        return self.change_hp(abs(int(amount)))
+
+    def is_dead(self):
+        return getattr(self, 'hp', 0) <= 0
 
     def handle_event(self, event):
 
