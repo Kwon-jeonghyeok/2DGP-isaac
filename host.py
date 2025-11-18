@@ -19,12 +19,15 @@ class Host:
 
     def get_bb(self):
         return self.x - 35, self.y - 75, self.x + 35, self.y
+    def get_range_bb(self):
+        return self.x - 175, self.y - 175, self.x + 175, self.y + 150
 
     def update(self):
         pass
     def draw(self):
         self.image.clip_draw(0, 0, 32, 60, self.x, self.y, 70, 150)
         draw_rectangle(*self.get_bb())
+        draw_rectangle(*self.get_range_bb())
 
     def handle_collision(self, group, other):
         pass
