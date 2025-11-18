@@ -133,6 +133,14 @@ class Isaac:
         self.hp = self.max_hp
         self.hearts_image = load_image('resource/UI_Hearts.png')
 
+        self.hurt_image = load_image('resource/hurt.png')
+        self.is_invulnerable = False
+        self.hurt_timer = 0.0
+        self.hurt_duration = 1.0  # 무적 시간
+        self.hurt_blink_interval = 0.12  # 깜빡임 간격
+        self._hurt_blink_acc =0.0
+        self.hurt_visible = True
+
 
         self.tear_reload = 0.5  # 재장전 시간(초)
         self.tear_cooldown = 0.0  # 남은 쿨다운(초)
@@ -174,7 +182,18 @@ class Isaac:
         self.state_machine.update()
         if self.tear_cooldown > 0.0:
             self.tear_cooldown = max(0.0, self.tear_cooldown - game_framework.frame_time)
-
+        # 무적 타이머 처리
+        if self.hurt_timer > 0.0:
+            dt = game_framework.frame_time
+            self.hurt_timer = max(0.0, self.hurt_timer - dt)
+            self._hurt_blink_acc += dt
+            if self._hurt_blink_acc >= self.hurt_blink_interval:
+                self._hurt_blink_acc -= self.hurt_blink_interval
+                self.hurt_visible = not self.hurt_visible
+            if self.hurt_timer == 0.0:
+                self.is_invulnerable = False
+                self.hurt_visible = True
+                self._hurt_blink_acc = 0.0
 
     def apply_map_bounds(self, bounds):
         left = bounds.get('map_left', -1e9)
@@ -233,11 +252,22 @@ class Isaac:
 
 
     def draw(self):
-        self.state_machine.draw()
         self.draw_hp()
+        if self.hurt_timer > 0.0:
+            if self.hurt_visible:
+                try:
+                    self.hurt_image.draw(self.x + 10, self.y - 10, 80, 80)
+                except Exception:
+                    pass
+        else:
+            # 평상시에는 기존 그리기와 HP UI를 그림
+            self.state_machine.draw()
+
         draw_rectangle(*self.get_bb())
 
     def fire_tear(self):
+        if self.is_invulnerable:
+            return
         if self.tear_cooldown <= 0.0:
             tear = Tear(self.x, self.y, self.face_dir)
             game_world.add_object(tear, 1)
@@ -274,8 +304,16 @@ class Isaac:
         return self.hp
 
     def take_damage(self, amount):
-        return self.change_hp(-abs(int(amount)))
-
+        if self.is_invulnerable:
+            return self.hp
+        old_hp = getattr(self, 'hp', 0)
+        applied = self.change_hp(-abs(int(amount)))
+        if applied < old_hp:
+            self.is_invulnerable = True
+            self.hurt_timer = self.hurt_duration
+            self._hurt_blink_acc = 0.0
+            self.hurt_visible = True
+        return applied
     def heal(self, amount):
         return self.change_hp(abs(int(amount)))
 
