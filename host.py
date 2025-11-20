@@ -96,26 +96,33 @@ class Host:
                 elif abs(self.y - isaac.y) <= self.align_tolerance and abs(self.x - isaac.x) <= self.detect_range:
                     self._start_attack()
 
+
         elif self.state == 'attack':
-            # 공격 애니메이션 동안 취약하고 주기적으로 총알 발사
             self._attack_timer -= dt
             self._shoot_timer -= dt
             self._attack_anim_timer += dt
             frame_time = max(0.0001, self.attack_duration / float(self.attack_frames))
+
+            old_index = self.attack_frame_index
+            advanced = 0
             while self._attack_anim_timer >= frame_time:
                 self._attack_anim_timer -= frame_time
-                self.attack_frame_index = (self.attack_frame_index + 1) % self.attack_frames
-
-            isaac = self._find_isaac()
-            if not self._has_shot:
-                # 첫 발만 발사
-                self._has_shot = True
-                if isaac:
-                    bullet = HostBullet(self.x, self.y, isaac.x, isaac.y)
-                else:
-                    bullet = HostBullet(self.x, self.y, self.x, self.y - 1)
-                game_world.add_object(bullet, 1)
-
+                advanced += 1
+            if advanced > 0:
+                self.attack_frame_index = (self.attack_frame_index + advanced) % self.attack_frames
+                if not self._has_shot:
+                    for i in range(advanced):
+                        step_index = (old_index + i + 1) % self.attack_frames
+                        if step_index == 1:
+                            # 프레임 1에서 총알 발사
+                            isaac = self._find_isaac()
+                            if isaac:
+                                bullet = HostBullet(self.x, self.y, isaac.x, isaac.y)
+                            else:
+                                bullet = HostBullet(self.x, self.y, self.x, self.y - 1)
+                            game_world.add_object(bullet, 1)
+                            self._has_shot = True
+                            break
             if self._attack_timer <= 0.0:
                 self.state = 'idle'
                 self.is_vulnerable = False
