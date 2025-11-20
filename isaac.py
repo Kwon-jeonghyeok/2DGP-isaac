@@ -358,5 +358,9 @@ class Isaac:
         if group == 'isaac:host':
             self.take_damage(1)
 
+        if group == 'host_bullet:isaac':
+            self.take_damage(1)
+            return
+
         pass
 
