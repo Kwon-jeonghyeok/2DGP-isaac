@@ -34,11 +34,11 @@ class Host:
         self.state = 'idle'
         # 감지/공격 파라미터
         self.align_tolerance = 24
-        self.detect_range = 220
-        self.attack_cooldown = 2.0
+        self.detect_range = 300
+        self.attack_cooldown = 1.5
         self._cooldown_timer = 0.0
 
-        self.attack_duration = 0.9
+        self.attack_duration = 3.0
         self._attack_timer = 0.0
         self.shoot_interval = 0.25
         self._shoot_timer = 0.0
@@ -49,6 +49,10 @@ class Host:
         self.attack_frames = 3
         self.attack_frame_index = 0
         self._attack_anim_timer = 0.0
+
+        self.fire_delay = 0.7
+        self._fire_delay_timer = 0.0
+        self._pending_shot = False
 
     def _is_position_free(self, x, y):
         la, ba, ra, ta = x - 35, y - 75, x + 35, y
@@ -97,12 +101,12 @@ class Host:
                     self._start_attack()
 
 
+
         elif self.state == 'attack':
             self._attack_timer -= dt
             self._shoot_timer -= dt
             self._attack_anim_timer += dt
             frame_time = max(0.0001, self.attack_duration / float(self.attack_frames))
-
             old_index = self.attack_frame_index
             advanced = 0
             while self._attack_anim_timer >= frame_time:
@@ -110,23 +114,35 @@ class Host:
                 advanced += 1
             if advanced > 0:
                 self.attack_frame_index = (self.attack_frame_index + advanced) % self.attack_frames
-                if not self._has_shot:
+                # 프레임 1(두번째 프레임)을 지나갔는지 검사하여 발사 대기 시작
+                if not self._has_shot and not self._pending_shot:
                     for i in range(advanced):
                         step_index = (old_index + i + 1) % self.attack_frames
                         if step_index == 1:
-                            # 프레임 1에서 총알 발사
-                            isaac = self._find_isaac()
-                            if isaac:
-                                bullet = HostBullet(self.x, self.y, isaac.x, isaac.y)
-                            else:
-                                bullet = HostBullet(self.x, self.y, self.x, self.y - 1)
-                            game_world.add_object(bullet, 1)
-                            self._has_shot = True
+                            # 프레임 1로 전환 — 즉시 발사하지 않고 지연 타이머 시작
+                            self._pending_shot = True
+                            self._fire_delay_timer = self.fire_delay
                             break
+            # pending이면 지연 감소 후 발사
+            if self._pending_shot and not self._has_shot:
+                self._fire_delay_timer -= dt
+                if self._fire_delay_timer <= 0.0 and self._attack_timer > 0.0:
+                    isaac = self._find_isaac()
+                    if isaac:
+                        bullet = HostBullet(self.x, self.y, isaac.x, isaac.y)
+                    else:
+                        bullet = HostBullet(self.x, self.y, self.x, self.y - 1)
+                    game_world.add_object(bullet, 1)
+                    self._has_shot = True
+                    self._pending_shot = False
+
             if self._attack_timer <= 0.0:
                 self.state = 'idle'
                 self.is_vulnerable = False
                 self._cooldown_timer = self.attack_cooldown
+                # 공격 종료 시 pending 취소
+                self._pending_shot = False
+                self._fire_delay_timer = 0.0
 
         # 애니메이션 프레임 갱신
         dtf = game_framework.frame_time
