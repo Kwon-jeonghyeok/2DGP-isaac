@@ -15,7 +15,7 @@ class Host:
                 Host.image = load_image("resource/monster/Host.png")
             except Exception:
                 Host.image = None
-        self.x, self.y = random.randint(180, 820), random.randint(150, 650)
+        self.x, self.y = random.randint(180, 820), random.randint(200, 650)
         self.frame = 0.0
         self.hp = 3
 
@@ -32,6 +32,7 @@ class Host:
         self._shoot_timer = 0.0
 
         self.is_vulnerable = False
+        self._has_shot = False
 
     def get_bb(self):
         return self.x - 35, self.y - 75, self.x + 35, self.y
@@ -71,8 +72,9 @@ class Host:
             self._attack_timer -= dt
             self._shoot_timer -= dt
             isaac = self._find_isaac()
-            if self._shoot_timer <= 0.0:
-                self._shoot_timer = self.shoot_interval
+            if not self._has_shot:
+                # 첫 발만 발사
+                self._has_shot = True
                 if isaac:
                     bullet = HostBullet(self.x, self.y, isaac.x, isaac.y)
                 else:
@@ -93,6 +95,7 @@ class Host:
         self._attack_timer = self.attack_duration
         self._shoot_timer = 0.0
         self.is_vulnerable = True
+        self._has_shot = False
 
     def draw(self):
         if Host.image:
@@ -119,7 +122,7 @@ class HostBullet:
             HostBullet.image = None
         self.x = x
         self.y = y
-        self.speed = 320.0
+        self.speed = 300.0
         dx = tx - x
         dy = ty - y
         dist = (dx*dx + dy*dy) ** 0.5
