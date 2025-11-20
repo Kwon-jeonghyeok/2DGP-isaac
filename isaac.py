@@ -194,6 +194,9 @@ class Isaac:
                 self.is_invulnerable = False
                 self.hurt_visible = True
                 self._hurt_blink_acc = 0.0
+        if self.hp == 0:
+            game_world.remove_object(self)
+
 
     def apply_map_bounds(self, bounds):
         left = bounds.get('map_left', -1e9)
@@ -271,6 +274,7 @@ class Isaac:
         if self.tear_cooldown <= 0.0:
             tear = Tear(self.x, self.y, self.face_dir)
             game_world.add_object(tear, 1)
+            game_world.add_collision_pair('host:tear', None, tear)
             self.tear_cooldown = self.tear_reload
 
     def draw_hp(self):
@@ -351,6 +355,8 @@ class Isaac:
         self.state_machine.handle_state_event(('INPUT', event))
 
     def handle_collision(self, group, other):
+        if group == 'isaac:host':
+            self.take_damage(1)
 
-            pass
+        pass
 

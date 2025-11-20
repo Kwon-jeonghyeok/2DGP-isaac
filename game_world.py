@@ -16,8 +16,9 @@ def remove_object(o):
 
 def clear():
 
-    global world
-
+    global world, collision_pairs
+    world = [[], [], []]
+    collision_pairs.clear()
     for layer in world:
         layer.clear()
 def update():

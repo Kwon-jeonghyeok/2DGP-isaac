@@ -15,6 +15,7 @@ class Host:
             Host.image = load_image("resource/monster/Host.png")
         self.x, self.y = random.randint(180, 820), random.randint(150, 650)
         self.frame = 0.0
+        self.hp = 3
 
 
     def get_bb(self):
@@ -23,6 +24,8 @@ class Host:
         return self.x - 175, self.y - 175, self.x + 175, self.y + 150
 
     def update(self):
+        if self.hp <= 0:
+            game_world.remove_object(self)
         pass
     def draw(self):
         self.image.clip_draw(0, 0, 32, 60, self.x, self.y, 70, 150)
@@ -30,4 +33,6 @@ class Host:
         draw_rectangle(*self.get_range_bb())
 
     def handle_collision(self, group, other):
+        if group == 'host:tear':
+            self.hp -= 1
         pass

@@ -91,7 +91,14 @@ class Tear:
                 game_world.remove_object(self)
 
     def get_bb(self):
-        return self.x - 22, self.y - 16, self.x + 4, self.y + 6
+        if self.moving:
+            return self.x - 22, self.y - 16, self.x + 4, self.y + 6
+        else:
+            return self.x - 10, self.y - 6, self.x , self.y
 
     def handle_collision(self, group, other):
+        if group == 'host:tear':
+
+            self.moving = False
+            self.explosion_frame = 0.0
         pass

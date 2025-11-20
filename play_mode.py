@@ -36,6 +36,8 @@ def init():
     game_world.add_object(isaac,1)
     stage_index = 1
 
+    game_world.add_collision_pair('isaac:host', isaac, None)
+
 def update():
     global stage, stage_index, isaac, host
 
@@ -69,9 +71,12 @@ def update():
 
         for h in host:
             game_world.add_object(h,1)
+            game_world.add_collision_pair('isaac:host',None,h)
+            game_world.add_collision_pair('host:tear', h, None)
+
         # 플레이어 재배치
         isaac.y = 175
-        isaac.take_damage(1)  # 체력 감소 예시
+        #isaac.take_damage(1)  # 체력 감소 예시
 
 
 
@@ -88,6 +93,12 @@ def update():
         stage_index = 1
         # 플레이어 재배치
         isaac.y = 700
+
+    if isaac.hp <=0:
+        game_world.clear()
+        stage_index = 1
+        stage = Stage_1()
+        game_framework.change_mode(title_mode)
 
     pass
 
