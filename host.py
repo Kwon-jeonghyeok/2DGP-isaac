@@ -46,6 +46,10 @@ class Host:
         self.is_vulnerable = False
         self._has_shot = False
 
+        self.attack_frames = 3
+        self.attack_frame_index = 0
+        self._attack_anim_timer = 0.0
+
     def _is_position_free(self, x, y):
         la, ba, ra, ta = x - 35, y - 75, x + 35, y
         for layer in game_world.world:
@@ -96,6 +100,12 @@ class Host:
             # 공격 애니메이션 동안 취약하고 주기적으로 총알 발사
             self._attack_timer -= dt
             self._shoot_timer -= dt
+            self._attack_anim_timer += dt
+            frame_time = max(0.0001, self.attack_duration / float(self.attack_frames))
+            while self._attack_anim_timer >= frame_time:
+                self._attack_anim_timer -= frame_time
+                self.attack_frame_index = (self.attack_frame_index + 1) % self.attack_frames
+
             isaac = self._find_isaac()
             if not self._has_shot:
                 # 첫 발만 발사
@@ -122,11 +132,17 @@ class Host:
         self.is_vulnerable = True
         self._has_shot = False
 
+        self.attack_frame_index = 0
+        self._attack_anim_timer = 0.0
+
     def draw(self):
         if Host.image:
-            Host.image.clip_draw(0, 0, 32, 60, self.x, self.y, 70, 150)
+            if self.state == 'attack':
+                fx = int(self.attack_frame_index) * 32
+                Host.image.clip_draw(fx, 0, 32, 60, self.x, self.y, 70, 150)
+            else:
+                Host.image.clip_draw(0, 0, 32, 60, self.x, self.y, 70, 150)
         else:
-            # 이미지가 없으면 단순 사각형으로 표시
             draw_rectangle(self.x - 35, self.y - 75, self.x + 35, self.y)
         draw_rectangle(*self.get_bb())
 
