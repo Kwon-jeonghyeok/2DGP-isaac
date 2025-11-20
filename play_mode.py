@@ -31,7 +31,7 @@ def init():
     game_world.add_object(stage,0)
 
     #host = Host()
-    host = [Host() for i in range(5)]
+    host = [Host() for i in range(3)]
     isaac = Isaac()
     game_world.add_object(isaac,2)
     stage_index = 1

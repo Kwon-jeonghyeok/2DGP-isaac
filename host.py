@@ -15,7 +15,19 @@ class Host:
                 Host.image = load_image("resource/monster/Host.png")
             except Exception:
                 Host.image = None
-        self.x, self.y = random.randint(180, 820), random.randint(200, 650)
+        max_attempts = 100
+        attempt = 0
+        found = False
+        while attempt < max_attempts and not found:
+            cx = random.randint(180, 820)
+            cy = random.randint(250, 650)
+            if self._is_position_free(cx, cy):
+                self.x, self.y = cx, cy
+                found = True
+            attempt += 1
+        if not found:
+            # 실패 시 마지막 후보
+            self.x, self.y = cx, cy
         self.frame = 0.0
         self.hp = 3
 
@@ -33,6 +45,19 @@ class Host:
 
         self.is_vulnerable = False
         self._has_shot = False
+
+    def _is_position_free(self, x, y):
+        la, ba, ra, ta = x - 35, y - 75, x + 35, y
+        for layer in game_world.world:
+            for o in layer:
+                if hasattr(o, 'get_bb'):
+                    try:
+                        lb, bb, rb, tb = o.get_bb()
+                    except Exception:
+                        continue
+                    if not (la > rb or ra < lb or ta < bb or ba > tb):
+                        return False
+        return True
 
     def get_bb(self):
         return self.x - 35, self.y - 75, self.x + 35, self.y
