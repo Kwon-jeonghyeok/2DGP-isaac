@@ -33,7 +33,7 @@ def init():
     #host = Host()
     host = [Host() for i in range(5)]
     isaac = Isaac()
-    game_world.add_object(isaac,1)
+    game_world.add_object(isaac,2)
     stage_index = 1
 
     game_world.add_collision_pair('isaac:host', isaac, None)
