@@ -19,8 +19,8 @@ class Host:
         attempt = 0
         found = False
         while attempt < max_attempts and not found:
-            cx = random.randint(180, 820)
-            cy = random.randint(250, 650)
+            cx = random.randint(150, 900)
+            cy = random.randint(275, 700)
             if self._is_position_free(cx, cy):
                 self.x, self.y = cx, cy
                 found = True
@@ -195,7 +195,7 @@ class HostBullet:
         self.owner = 'host'
 
     def get_bb(self):
-        return self.x - 8, self.y - 8, self.x + 8, self.y + 8
+        return self.x - 10, self.y - 10, self.x + 10, self.y + 10
 
     def update(self):
         dt = game_framework.frame_time
@@ -234,5 +234,4 @@ class HostBullet:
     def draw(self):
         if HostBullet.image:
             HostBullet.image.draw(self.x, self.y)
-        else:
             draw_rectangle(*self.get_bb())
