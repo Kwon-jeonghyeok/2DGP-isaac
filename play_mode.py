@@ -39,6 +39,19 @@ def init():
     stage_index = 1
 
     game_world.add_collision_pair('isaac:host', isaac, None)
+def _remove_projectiles():
+    for layer in list(game_world.world):
+        for o in list(layer):
+            if o is None:
+                continue
+            name = o.__class__.__name__
+            if name in ('Tear', 'HostBullet'):
+                try:
+                    game_world.remove_object(o)
+                except Exception:
+                    # 이미 제거되었거나 다른 스레드 문제 등 무시
+                    pass
+
 
 def update():
     global stage, stage_index, isaac, host
@@ -91,6 +104,7 @@ def update():
     # 스테이지 전환
     if isaac.y > 750 and stage_index == 1:
         # 기존 스테이지 제거 및 새 스테이지 추가
+        _remove_projectiles()
         try:
             game_world.remove_object(stage)
         except ValueError:
@@ -113,6 +127,7 @@ def update():
 
     if isaac.y < 125 and stage_index == 2:
         # 기존 스테이지 제거 및 새 스테이지 추가
+        _remove_projectiles()
         try:
             game_world.remove_object(stage)
             for h in host:
@@ -126,6 +141,7 @@ def update():
         isaac.y = 700
     if isaac.y > 750 and stage_index == 2:
         # 기존 스테이지 제거 및 새 스테이지 추가
+        _remove_projectiles()
         try:
             game_world.remove_object(stage)
             for h in host:
@@ -139,6 +155,7 @@ def update():
         isaac.y = 175
     if isaac.y < 125 and stage_index == 3:
         # 기존 스테이지 제거 및 새 스테이지 추가
+        _remove_projectiles()
         try:
             game_world.remove_object(stage)
         except ValueError:
@@ -157,12 +174,14 @@ def update():
 
 
     if isaac.hp <=0:
+        _remove_projectiles()
         game_world.clear()
         stage_index = 1
         stage = Stage_1()
         game_framework.change_mode(title_mode)
 
     pass
+
 
 def draw():
     clear_canvas()
