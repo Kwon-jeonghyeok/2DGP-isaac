@@ -9,6 +9,7 @@ FRAMES_PER_ACTION = 10.0
 
 class Host:
     image = None
+    _instances = []
     def __init__(self):
         if Host.image is None:
             try:
@@ -28,6 +29,7 @@ class Host:
         if not found:
             # 실패 시 마지막 후보
             self.x, self.y = cx, cy
+        Host._instances.append(self)
         self.frame = 0.0
         self.hp = 3
 
@@ -66,6 +68,16 @@ class Host:
                         continue
                     if not (la > rb or ra < lb or ta < bb or ba > tb):
                         return False
+        for h in Host._instances:
+            if h is self:
+                continue
+            try:
+                hl, hb, hr, ht = h.get_bb()
+            except Exception:
+                continue
+            if not (la > hr or ra < hl or ta < hb or ba > ht):
+                return False
+
         return True
 
     def get_bb(self):
@@ -83,7 +95,14 @@ class Host:
 
         # 사망 처리
         if self.hp <= 0:
-            game_world.remove_object(self)
+            try:
+                game_world.remove_object(self)
+            except Exception:
+                pass
+            try:
+                Host._instances.remove(self)
+            except ValueError:
+                pass
             return
 
         # 쿨다운 감소
