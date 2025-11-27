@@ -1,6 +1,23 @@
 from pico2d import load_image, draw_rectangle
 import game_world
 import random
+import math
+import game_framework
+from behavior_tree import BehaviorTree, Action, Sequence, Condition, Selector
+import common
+
+PIXEL_PER_METER = (10.0 / 0.3)  # 10 pixel 30 cm
+RUN_SPEED_KMPH = 10.0  # Km / Hour
+RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
+RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
+RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
+
+TIME_PER_ACTION = 0.5
+ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+FRAMES_PER_ACTION = 2.0
+
+animation_names = ['Fly', 'Idle']
+
 
 class Sucker:
     image = None
@@ -44,6 +61,16 @@ class Sucker:
         self.frame = 0.0
         self.hp = 2
         self.state = 'idle'
+        self.speed =0.0
+        self.dir = 0.0
+
+        self.patrol_center = (self.x, self.y)
+        self.patrol_range = random.randint(40, 160)  # 각자 다른 범위
+        self._patrol_dir = 1  # 1: 오른쪽으로 다음, -1: 왼쪽으로 다음
+
+        self.tx, self.ty = 0, 0
+        self.build_behavior_tree()
+
 
     @classmethod
     def spawn_many(cls, count, depth=1):
@@ -114,12 +141,19 @@ class Sucker:
         return self.x - 20, self.y - 25, self.x + 20, self.y + 25
 
     def update(self):
-        pass
+        self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % FRAMES_PER_ACTION
+        try:
+            self.bt.run()
+        except Exception:
+            pass
 
     def draw(self):
         sx, sy = game_world.world_to_screen(self.x, self.y)
         if Sucker.image:
-            Sucker.image.draw(sx, sy)
+            if math.cos(self.dir) < 0:
+                Sucker.image.clip_composite_draw(int(self.frame) * 32, 0, 32, 32, 0, 'h', sx, sy, 64, 64)
+            else:
+                Sucker.image.clip_draw(int(self.frame) * 32, 0, 32, 32, sx, sy, 64, 64)
         else:
             draw_rectangle(sx - 20, sy - 25, sx + 20, sy + 25)
 
@@ -137,3 +171,58 @@ class Sucker:
                 pass
             if self.hp <= 0:
                 self.destroy()
+
+    def set_target_location(self, x=None, y=None):
+        if not x or not y:
+            raise ValueError('Location should be given')
+        self.tx, self.ty = x, y
+        return BehaviorTree.SUCCESS
+
+    def distance_less_than(self, x1, y1, x2, y2, r):
+        distance2 = (x1 - x2) ** 2 + (y1 - y2) ** 2
+        return distance2 < (PIXEL_PER_METER*r) ** 2
+    def move_little_to(self, tx, ty):
+        self.dir = math.atan2(ty-self.y, tx-self.x)
+        distance = RUN_SPEED_PPS * game_framework.frame_time
+        self.x += distance * math.cos(self.dir)
+        self.y += distance * math.sin(self.dir)
+    def move_to(self, r=0.5):
+        self.state = 'Fly'
+        self.move_little_to(self.tx, self.ty)
+        if self.distance_less_than(self.tx, self.ty, self.x, self.y, r):
+            return BehaviorTree.SUCCESS
+        else:
+            return BehaviorTree.RUNNING
+    def if_isaac_nearby(self, r):
+        if self.distance_less_than(common.isaac.x, common.isaac.y, self.x, self.y, r):
+            return BehaviorTree.SUCCESS
+        else:
+            return BehaviorTree.FAIL
+    def move_to_isaac(self, r=0.5):
+        self.state = 'Fly'
+        self.move_little_to(common.isaac.x, common.isaac.y)
+        if self.distance_less_than(common.isaac.x, common.isaac.y, self.x, self.y, r):
+            return BehaviorTree.SUCCESS
+        else:
+            return BehaviorTree.RUNNING
+
+    def get_patrol_location(self):
+        cx, cy = self.patrol_center
+        target_x = cx + self._patrol_dir * self.patrol_range
+        # y는 중심 y로 고정(좌우 왕복)
+        self.tx, self.ty = target_x, cy
+        # 다음엔 반대 방향으로 이동
+        self._patrol_dir *= -1
+        return BehaviorTree.SUCCESS
+        pass
+    def build_behavior_tree(self):
+        a1= Action('Move to', self.move_to)
+        a2 = Action('Get Patrol Location', self.get_patrol_location)
+        c1 = Condition('Isaac nearby?', self.if_isaac_nearby, 10)
+        a3 = Action('Move to Isaac', self.move_to_isaac)
+        root = chase_isaac = Sequence('Chase Isaac',c1 , a3)
+        root = patrol = Sequence('Patrol', a2, a1)
+        root = Selector('Sucker Behavior', chase_isaac, patrol)
+
+
+        self.bt = BehaviorTree(root)
