@@ -8,6 +8,8 @@ from isaac import Isaac
 from stage_1 import Stage_1
 from stage_2 import Stage_2
 from host import Host
+from stage_3 import Stage_3
+
 isaac =None
 stage = None
 host = None
@@ -52,6 +54,35 @@ def update():
     bounds = stage.get_map_bounds()
     isaac.apply_map_bounds(bounds)
 
+    vp_w = game_world.camera.get('w',1000.0)
+    vp_h = game_world.camera.get('h',800.0)
+
+
+
+    left = bounds.get('map_left', -1e9)
+    right = bounds.get('map_right', 1e9)
+    bottom = bounds.get('map_bottom', -1e9)
+    top = bounds.get('map_top', 1e9)
+    cam_x = isaac.x - vp_w / 2.0
+    cam_y = isaac.y - vp_h / 2.0
+
+    map_w = right - left
+    map_h = top - bottom
+    # 카메라의 x는 맵의 좌/우 범위에 따라 제한
+    # 맵이 뷰포트보다 좁으면 맵을 뷰포트 안에서 가운데로 정렬
+    if map_w <= vp_w:
+        cam_x = left + (map_w - vp_w) / 2.0
+    else:
+        cam_x = max(left, min(cam_x, right - vp_w))
+
+    if map_h <= vp_h:
+        cam_y = bottom + (map_h - vp_h) / 2.0
+    else:
+        cam_y = max(bottom, min(cam_y, top - vp_h))
+
+    game_world.camera['x'] = cam_x
+    game_world.camera['y'] = cam_y
+
     # 충돌 처리
     game_world.handle_collision()
 
@@ -93,6 +124,37 @@ def update():
         stage_index = 1
         # 플레이어 재배치
         isaac.y = 700
+    if isaac.x > 900 and stage_index == 2:
+        # 기존 스테이지 제거 및 새 스테이지 추가
+        try:
+            game_world.remove_object(stage)
+            for h in host:
+                game_world.remove_object(h)
+        except ValueError:
+            pass
+        stage = Stage_3()
+        game_world.add_object(stage, 0)
+        stage_index = 3
+        # 플레이어 재배치
+        isaac.x = 150
+    if isaac.x < 150 and stage_index == 3:
+        # 기존 스테이지 제거 및 새 스테이지 추가
+        try:
+            game_world.remove_object(stage)
+        except ValueError:
+            pass
+        stage = Stage_2()
+        game_world.add_object(stage, 0)
+        stage_index = 2
+
+        for h in host:
+            game_world.add_object(h,1)
+            game_world.add_collision_pair('isaac:host',None,h)
+            game_world.add_collision_pair('host:tear', h, None)
+
+        # 플레이어 재배치
+        isaac.x = 850
+
 
     if isaac.hp <=0:
         game_world.clear()

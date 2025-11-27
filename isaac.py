@@ -54,9 +54,15 @@ class Idle:
         pass
     def draw(self):
         # 몸통
-        self.isaac.image.clip_draw(0, 850, 40, 30, self.isaac.x, self.isaac.y - 35, 80, 60)
+        #self.isaac.image.clip_draw(0, 850, 40, 30, self.isaac.x, self.isaac.y - 35, 80, 60)
         #머리
-        self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y,90,75)
+        #self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y,90,75)
+
+        sx, sy = game_world.world_to_screen(self.isaac.x, self.isaac.y - 35)
+        self.isaac.image.clip_draw(0, 850, 40, 30, sx, sy, 80, 60)
+        hx, hy = game_world.world_to_screen(self.isaac.x, self.isaac.y)
+        self.isaac.image.clip_draw(0, 900, 40, 35, hx, hy, 90, 75)
+
 
 
 class Walk:
@@ -107,15 +113,33 @@ class Walk:
         self.isaac.y += self.isaac.y_dir * RUN_SPEED_PPS * game_framework.frame_time
 
     def draw(self):
+        #if self.isaac.face_dir == 1:  # right
+            #self.isaac.image.clip_draw(int(self.isaac.frame) * 32 , 810, 40, 26, self.isaac.x, self.isaac.y - 35, 80, 52)
+            #self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
+        #elif self.isaac.face_dir == -1:  # left
+            #self.isaac.image.clip_composite_draw(int(self.isaac.frame) * 32, 810, 40, 26,0,'h', self.isaac.x+14, self.isaac.y - 35, 80, 52)
+            #self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
+        #elif self.isaac.face_dir == 0 or self.isaac.face_dir == 2:  #위 아래 애니메이션 동일
+            #self.isaac.image.clip_draw(int(self.isaac.frame) * 32 , 853, 40, 26, self.isaac.x, self.isaac.y - 35, 80, 52)
+            #self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
+
         if self.isaac.face_dir == 1:  # right
-            self.isaac.image.clip_draw(int(self.isaac.frame) * 32 , 810, 40, 26, self.isaac.x, self.isaac.y - 35, 80, 52)
-            self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
-        elif self.isaac.face_dir == -1:  # left
-            self.isaac.image.clip_composite_draw(int(self.isaac.frame) * 32, 810, 40, 26,0,'h', self.isaac.x+14, self.isaac.y - 35, 80, 52)
-            self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
-        elif self.isaac.face_dir == 0 or self.isaac.face_dir == 2:  #위 아래 애니메이션 동일
-            self.isaac.image.clip_draw(int(self.isaac.frame) * 32 , 853, 40, 26, self.isaac.x, self.isaac.y - 35, 80, 52)
-            self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
+            sx, sy = game_world.world_to_screen(self.isaac.x, self.isaac.y - 35)
+            self.isaac.image.clip_draw(int(self.isaac.frame) * 32 , 810, 40, 26, sx, sy, 80, 52)
+            hx, hy = game_world.world_to_screen(self.isaac.x, self.isaac.y)
+            self.isaac.image.clip_draw(0, 900, 40, 35, hx, hy, 90, 75)
+
+        elif self.isaac.face_dir == -1:  # left (mirror)
+            sx, sy = game_world.world_to_screen(self.isaac.x + 14, self.isaac.y - 35)  # +14 유지 (원래 코드와 동일한 시프트)
+            self.isaac.image.clip_composite_draw(int(self.isaac.frame) * 32, 810, 40, 26, 0, 'h', sx, sy, 80, 52)
+            hx, hy = game_world.world_to_screen(self.isaac.x, self.isaac.y)
+            self.isaac.image.clip_draw(0, 900, 40, 35, hx, hy, 90, 75)
+
+        else:  # 위/아래
+            sx, sy = game_world.world_to_screen(self.isaac.x, self.isaac.y - 35)
+            self.isaac.image.clip_draw(int(self.isaac.frame) * 32 , 853, 40, 26, sx, sy, 80, 52)
+            hx, hy = game_world.world_to_screen(self.isaac.x, self.isaac.y)
+            self.isaac.image.clip_draw(0, 900, 40, 35, hx, hy, 90, 75)
 
 
 class Isaac:
@@ -259,14 +283,21 @@ class Isaac:
         if self.hurt_timer > 0.0:
             if self.hurt_visible:
                 try:
-                    self.hurt_image.draw(self.x + 10, self.y - 10, 80, 80)
+                    #self.hurt_image.draw(self.x + 10, self.y - 10, 80, 80)
+                    sx, sy = game_world.world_to_screen(self.x + 10, self.y - 10)
+                    # hurt_image는 UI처럼 화면 상대일 수도 있지만 월드에 붙어있다면 보정
+                    self.hurt_image.draw(sx, sy, 80, 80)
                 except Exception:
                     pass
         else:
             # 평상시에는 기존 그리기와 HP UI를 그림
             self.state_machine.draw()
 
-        draw_rectangle(*self.get_bb())
+        #draw_rectangle(*self.get_bb())
+        l, b, r, t = self.get_bb()
+        ls, bs = game_world.world_to_screen(l, b)
+        rs, ts = game_world.world_to_screen(r, t)
+        draw_rectangle(ls, bs, rs, ts)
 
     def fire_tear(self):
         if self.is_invulnerable:
