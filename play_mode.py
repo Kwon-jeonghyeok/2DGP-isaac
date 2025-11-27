@@ -8,11 +8,13 @@ from isaac import Isaac
 from stage_1 import Stage_1
 from stage_2 import Stage_2
 from host import Host
+from sucker import Sucker
 from stage_3 import Stage_3
 
 isaac =None
 stage = None
 host = None
+suckers = []
 stage_index = 1
 def handle_events():
     event_list = get_events()
@@ -34,11 +36,13 @@ def init():
 
     #host = Host()
     host = [Host() for i in range(3)]
+
     isaac = Isaac()
     game_world.add_object(isaac,2)
     stage_index = 1
 
     game_world.add_collision_pair('isaac:host', isaac, None)
+    game_world.add_collision_pair('isaac:sucker', isaac, None)
 def _remove_projectiles():
     for layer in list(game_world.world):
         for o in list(layer):
@@ -54,7 +58,7 @@ def _remove_projectiles():
 
 
 def update():
-    global stage, stage_index, isaac, host
+    global stage, stage_index, isaac, host, suckers
 
     # 안전 검사
     if isaac is None or stage is None:
@@ -99,11 +103,8 @@ def update():
     # 충돌 처리
     game_world.handle_collision()
 
-
-
-    # 스테이지 전환
+    # Stage_1 -> Stage_2
     if isaac.y > 750 and stage_index == 1:
-        # 기존 스테이지 제거 및 새 스테이지 추가
         _remove_projectiles()
         try:
             game_world.remove_object(stage)
@@ -113,64 +114,87 @@ def update():
         game_world.add_object(stage, 0)
         stage_index = 2
 
-
         for h in host:
-            game_world.add_object(h,1)
-            game_world.add_collision_pair('isaac:host',None,h)
+            game_world.add_object(h, 1)
+            game_world.add_collision_pair('isaac:host', None, h)
             game_world.add_collision_pair('host:tear', h, None)
 
-        # 플레이어 재배치
         isaac.y = 175
-        #isaac.take_damage(1)  # 체력 감소 예시
 
-
-
+    # Stage_2 -> Stage_1 (돌아갈 때)
     if isaac.y < 125 and stage_index == 2:
-        # 기존 스테이지 제거 및 새 스테이지 추가
         _remove_projectiles()
         try:
             game_world.remove_object(stage)
             for h in host:
-                game_world.remove_object(h)
+                try:
+                    game_world.remove_object(h)
+                except Exception:
+                    pass
         except ValueError:
             pass
         stage = Stage_1()
         game_world.add_object(stage, 0)
         stage_index = 1
-        # 플레이어 재배치
         isaac.y = 700
+
+    # Stage_3 진입 (Stage_2 -> Stage_3)
     if isaac.y > 750 and stage_index == 2:
-        # 기존 스테이지 제거 및 새 스테이지 추가
         _remove_projectiles()
         try:
             game_world.remove_object(stage)
             for h in host:
-                game_world.remove_object(h)
+                try:
+                    game_world.remove_object(h)
+                except Exception:
+                    pass
         except ValueError:
             pass
+
         stage = Stage_3()
         game_world.add_object(stage, 0)
         stage_index = 3
-        # 플레이어 재배치
         isaac.y = 175
+
+        # Sucker 6마리 생성 및 월드/충돌페어 등록
+        suckers = [Sucker() for _ in range(6)]
+        for s in suckers:
+            game_world.add_object(s, 1)
+            # 아이작 <-> sucker 충돌 페어에 b측으로 추가
+            game_world.add_collision_pair('isaac:sucker', None, s)
+            # 아이작의 눈물(Tear)과 충돌하도록 호스트 그룹 재사용
+            game_world.add_collision_pair('host:tear', s, None)
+
+    # Stage_3 -> Stage_2 (이탈 시 sucker 제거)
     if isaac.y < 125 and stage_index == 3:
-        # 기존 스테이지 제거 및 새 스테이지 추가
         _remove_projectiles()
         try:
             game_world.remove_object(stage)
         except ValueError:
             pass
+
+        # suckers 안전 제거
+        for s in list(suckers):
+            try:
+                game_world.remove_object(s)
+            except Exception:
+                pass
+            try:
+                # 내부 추적 리스트 정리
+                from sucker import Sucker as _SuckerCls
+                if s in _SuckerCls._instances:
+                    _SuckerCls._instances.remove(s)
+            except Exception:
+                pass
+        suckers = []
+
         stage = Stage_2()
         game_world.add_object(stage, 0)
         stage_index = 2
-
         for h in host:
-            game_world.add_object(h,1)
-            game_world.add_collision_pair('iddsaac:host',None,h)
+            game_world.add_object(h, 1)
+            game_world.add_collision_pair('isaac:host', None, h)
             game_world.add_collision_pair('host:tear', h, None)
-
-        # 플레이어 재배치
-        isaac.y = 700
 
 
     if isaac.hp <=0:

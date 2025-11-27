@@ -392,6 +392,9 @@ class Isaac:
         if group == 'host_bullet:isaac':
             self.take_damage(1)
             return
+        if group == 'isaac:sucker':
+            self.take_damage(1)
+            return
 
         pass
 

@@ -134,4 +134,7 @@ class Tear:
 
             self.moving = False
             self.explosion_frame = 0.0
+        if group == 'sucker:tear':
+            self.moving = False
+            self.explosion_frame = 0.0
         pass
