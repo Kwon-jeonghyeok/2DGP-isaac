@@ -82,7 +82,7 @@ class Sucker:
             # isaac은 init 시 이미 왼쪽 리스트에 추가되어 있어 None, s 로 추가하는 방식 유지
             game_world.add_collision_pair('isaac:sucker', None, s)
             # Tear(아이작의 공격)을 검사하는 기존 그룹 재사용
-            game_world.add_collision_pair('host:tear', s, None)
+            game_world.add_collision_pair('sucker:tear', s, None)
             spawned.append(s)
         return spawned
 
@@ -163,8 +163,7 @@ class Sucker:
         draw_rectangle(ls, bs, rs, ts)
 
     def handle_collision(self, group, other):
-        # isaac의 충돌 그룹명, 또는 host의 tear 그룹에 맞을 때 피해 처리
-        if group == 'host:tear':
+        if group == 'sucker:tear':
             try:
                 self.hp -= 1
             except Exception:
