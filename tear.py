@@ -30,11 +30,12 @@ class Tear:
         self.EXPLOSION_FRAMES = 8
 
     def draw(self):
+        sx, sy = game_world.world_to_screen(self.x, self.y)
         if self.moving:
 
-            self.image.clip_draw(280, 215, 30, 30, self.x, self.y, 40, 40)
+            self.image.clip_draw(280, 215, 30, 30, sx, sy, 40, 40)
             # self.image.clip_draw(int(self.frame) * 32 + 300, 215, 32, 30, self.x, self.y, 45, 45)
-            draw_rectangle(*self.get_bb())
+
         else:
             # 폭발 애니메이션: 총 8프레임
             frame_index = int(self.explosion_frame)
@@ -46,9 +47,13 @@ class Tear:
             src_y_row0 = 215
             src_y_row1 = src_y_row0 - (frame_h*2)  # 아래로 이동한 행
             src_y = src_y_row0 if frame_index < 4 else src_y_row1
-            self.image.clip_draw(src_x, src_y, frame_w, frame_h, self.x, self.y, 40, 40)
-            draw_rectangle(*self.get_bb())
+            self.image.clip_draw(src_x, src_y, frame_w, frame_h, sx, sy, 40, 40)
+            #draw_rectangle(*self.get_bb())
 
+        la, ba, ra, ta = self.get_bb()
+        ls, bs = game_world.world_to_screen(la, ba)
+        rs, ts = game_world.world_to_screen(ra, ta)
+        draw_rectangle(ls, bs, rs, ts)
     def update(self):
         # 이동 중일 때
         if self.moving:
