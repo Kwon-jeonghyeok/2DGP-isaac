@@ -1,5 +1,3 @@
-# python
-# File: `sucker.py`
 from pico2d import load_image, draw_rectangle
 import game_world
 import random
