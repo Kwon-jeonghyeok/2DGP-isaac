@@ -79,14 +79,42 @@ class Tear:
             if self.traveled >= self.max_range:
                 self.moving = False
                 self.explosion_frame = 0.0
+                return
 
-            # 화면 경계
-            if self.x < 75 or self.x > 1000 - 75 or self.y < 75 or self.y > 800 - 75:
-                self.moving = False
-                self.explosion_frame = 0.0
-                #game_world.remove_object(self)
+            stage_obj = None
+            bounds = None
+            for layer in game_world.world:
+                for o in layer:
+                    if hasattr(o, 'get_map_bounds'):
+                        try:
+                            bounds = o.get_map_bounds()
+                            stage_obj = o
+                        except Exception:
+                            bounds = None
+                            stage_obj = None
+                        break
+                if bounds:
+                    break
 
-        # 폭발 애니메이션
+            margin = 75
+
+            # Stage_3일 때만 맵 기반 경계 검사 적용
+            if stage_obj and stage_obj.__class__.__name__ == 'Stage_3' and bounds:
+                left = bounds.get('map_left', -1e9)
+                right = bounds.get('map_right', 1e9)
+                bottom = bounds.get('map_bottom', -1e9)
+                top = bounds.get('map_top', 1e9)
+
+                if self.x < left + margin or self.x > right - margin or self.y < bottom - margin or self.y > top + margin:
+                    self.moving = False
+                    self.explosion_frame = 0.0
+                    return
+            else:
+                # 그 외 스테이지는 기존 화면 경계 사용
+                if self.x < 75 or self.x > 1000 - 75 or self.y < 75 or self.y > 800 - 75:
+                    self.moving = False
+                    self.explosion_frame = 0.0
+                    return
         else:
             # 폭발 애니메이션 속도(프레임/초 기반)
             self.explosion_frame += FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time
