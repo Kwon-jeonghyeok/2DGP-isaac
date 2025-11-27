@@ -14,7 +14,7 @@ class Stage_2:
             'map_top': 700,
             'notches': [
 
-                {'x': 875, 'y': 400, 'w': 50, 'h': 70},
+                {'x': 490, 'y': 700, 'w': 50, 'h': 50},
                 {'x': 490, 'y': 175, 'w': 50, 'h': 50},
             ]
         }
@@ -30,6 +30,8 @@ class Stage_2:
         self.image.composite_draw(0,'hv',750,200,500,400)
         self.image2.clip_composite_draw(0, 40, 50, 52,0,'v' ,500, 120, 120, 120)
         self.image2.clip_composite_draw(50, 40, 50, 52,0,'v', 465, 120, 130, 120)
+        self.image2.clip_draw(0,40,50,52,500,680,120,120)
+        self.image2.clip_draw(50, 40, 50, 52, 465, 680, 130, 120)
 
 
         pass

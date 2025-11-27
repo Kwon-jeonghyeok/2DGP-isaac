@@ -124,7 +124,7 @@ def update():
         stage_index = 1
         # 플레이어 재배치
         isaac.y = 700
-    if isaac.x > 900 and stage_index == 2:
+    if isaac.y > 750 and stage_index == 2:
         # 기존 스테이지 제거 및 새 스테이지 추가
         try:
             game_world.remove_object(stage)
@@ -136,8 +136,8 @@ def update():
         game_world.add_object(stage, 0)
         stage_index = 3
         # 플레이어 재배치
-        isaac.x = 150
-    if isaac.x < 150 and stage_index == 3:
+        isaac.y = 175
+    if isaac.y < 125 and stage_index == 3:
         # 기존 스테이지 제거 및 새 스테이지 추가
         try:
             game_world.remove_object(stage)
@@ -149,11 +149,11 @@ def update():
 
         for h in host:
             game_world.add_object(h,1)
-            game_world.add_collision_pair('isaac:host',None,h)
+            game_world.add_collision_pair('iddsaac:host',None,h)
             game_world.add_collision_pair('host:tear', h, None)
 
         # 플레이어 재배치
-        isaac.x = 850
+        isaac.y = 700
 
 
     if isaac.hp <=0:
