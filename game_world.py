@@ -1,5 +1,17 @@
 world = [[], [], []] # layers for game objects
 
+camera = {'x':0.0, 'y':0.0, 'w':1000, 'h':800}
+
+def world_to_screen(x, y):
+    return x - camera['x'], y - camera['y']
+
+def screen_to_world(sx,sy):
+    return sx + camera['x'], sy + camera['y']
+
+def set_viewport(w, h):
+    camera['w'] = float(w)
+    camera['h'] = float(h)
+
 def add_object(o, depth):
     world[depth].append(o)
 
@@ -19,6 +31,8 @@ def clear():
     global world, collision_pairs
     world = [[], [], []]
     collision_pairs.clear()
+    camera['x'] = 0.0
+    camera['y'] = 0.0
     for layer in world:
         layer.clear()
 def update():
