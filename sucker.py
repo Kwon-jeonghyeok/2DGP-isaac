@@ -132,7 +132,7 @@ class Sucker:
 
     def handle_collision(self, group, other):
         # isaac의 충돌 그룹명, 또는 host의 tear 그룹에 맞을 때 피해 처리
-        if group == 'isaac:sucker' or group == 'host:tear':
+        if group == 'host:tear':
             try:
                 self.hp -= 1
             except Exception:
