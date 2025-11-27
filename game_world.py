@@ -58,12 +58,33 @@ def add_collision_pair(group, a, b):
         collision_pairs[group][1].append(b)
 
 def handle_collision():
-    for group, pairs in collision_pairs.items():
-        for a in pairs[0]:
-            for b in pairs[1]:
-                if collide(a, b):
-                    a.handle_collision(group, b)  # group :충돌정보, b : 대상
-                    b.handle_collision(group, a)
+    # collision_pairs의 아이템을 수정 도중 안전하게 순회하기 위해 items()의 복사본 사용
+    for group, pairs in list(collision_pairs.items()):
+        # 검사할 때 원본 리스트를 직접 순회하지 않고 얕은 복사본을 만듦
+        a_candidates = list(pairs[0])
+        b_candidates = list(pairs[1])
+
+        for a in a_candidates:
+            if a is None:
+                continue
+            for b in b_candidates:
+                if b is None:
+                    continue
+
+                # 이미 누군가의 handle_collision에서 제거됐으면 건너뜀
+                if a not in pairs[0] or b not in pairs[1]:
+                    continue
+
+                try:
+                    if collide(a, b):
+                        # 먼저 a의 충돌 처리 실행
+                        a.handle_collision(group, b)
+                        # 만약 b가 a.handle_collision() 안에서 제거되지 않았다면 b의 핸들러 호출
+                        if b in pairs[1]:
+                            b.handle_collision(group, a)
+                except Exception:
+                    # 개별 충돌 처리에서 예외가 나와도 전체 루프는 계속되도록 방지
+                    continue
 
 # 충돌검사
 def collide(a, b):
