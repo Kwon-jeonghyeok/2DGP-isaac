@@ -10,12 +10,14 @@ FRAMES_PER_ACTION = 10.0
 class Host:
     image = None
     _instances = []
+
     def __init__(self):
         if Host.image is None:
             try:
                 Host.image = load_image("resource/monster/Host.png")
             except Exception:
                 Host.image = None
+
         max_attempts = 100
         attempt = 0
         found = False
@@ -27,14 +29,14 @@ class Host:
                 found = True
             attempt += 1
         if not found:
-            # 실패 시 마지막 후보
+            # 실패 시 마지막 후보 사용
             self.x, self.y = cx, cy
+
         Host._instances.append(self)
         self.frame = 0.0
         self.hp = 3
 
         self.state = 'idle'
-        # 감지/공격 파라미터
         self.align_tolerance = 40
         self.detect_range = 600
         self.attack_cooldown = 1.5
@@ -55,7 +57,31 @@ class Host:
         self.fire_delay = 0.7
         self._fire_delay_timer = 0.0
         self._pending_shot = False
-        self.attack_frame_durations = [1.0, 2.0,1.0]
+        self.attack_frame_durations = [1.0, 2.0, 1.0]
+
+    @classmethod
+    def spawn_many(cls, count, depth=1):
+        """Host 인스턴스 여러개 생성하여 game_world에 추가하고 충돌 페어를 등록한다."""
+        spawned = []
+        for _ in range(count):
+            h = cls()
+            game_world.add_object(h, depth)
+            # 충돌 페어 등록: Isaac(후에 등록된 a/b 관례에 맞춰 play_mode와 중복 주의)
+            game_world.add_collision_pair('isaac:host', None, h)
+            game_world.add_collision_pair('host:tear', h, None)
+            spawned.append(h)
+        return spawned
+
+    def destroy(self):
+        """game_world에서 안전하게 제거하고 내부 리스트에서 자신을 제거."""
+        try:
+            game_world.remove_object(self)
+        except Exception:
+            pass
+        try:
+            Host._instances.remove(self)
+        except ValueError:
+            pass
 
     def _is_position_free(self, x, y):
         la, ba, ra, ta = x - 35, y - 75, x + 35, y
@@ -77,7 +103,6 @@ class Host:
                 continue
             if not (la > hr or ra < hl or ta < hb or ba > ht):
                 return False
-
         return True
 
     def get_bb(self):
@@ -95,51 +120,38 @@ class Host:
 
         # 사망 처리
         if self.hp <= 0:
-            try:
-                game_world.remove_object(self)
-            except Exception:
-                pass
-            try:
-                Host._instances.remove(self)
-            except ValueError:
-                pass
+            self.destroy()
             return
 
         # 쿨다운 감소
         if self._cooldown_timer > 0.0:
             self._cooldown_timer = max(0.0, self._cooldown_timer - dt)
 
-        # 상태 머신
+        # 상태 머신(간단화된 기존 로직 유지)
         if self.state == 'idle':
             self.is_vulnerable = False
             isaac = self._find_isaac()
             if isaac and self._cooldown_timer == 0.0:
-                # x축 혹은 y축 일직선 근접 검사
                 if abs(self.x - isaac.x) <= self.align_tolerance and abs(self.y - isaac.y) <= self.detect_range:
                     self._start_attack()
                 elif abs(self.y - isaac.y) <= self.align_tolerance and abs(self.x - isaac.x) <= self.detect_range:
                     self._start_attack()
 
-
-
         elif self.state == 'attack':
             self._attack_timer -= dt
             self._shoot_timer -= dt
             self._attack_anim_timer += dt
-            # 프레임별 지속시간을 사용해 전환 처리 (큰 dt로 여러 프레임을 건너뛰는 경우에도 처리)
             while True:
                 cur_dur = self.attack_frame_durations[self.attack_frame_index]
                 if self._attack_anim_timer < cur_dur:
                     break
                 self._attack_anim_timer -= cur_dur
-                # 한 스텝 전환
                 prev_index = self.attack_frame_index
                 self.attack_frame_index = (self.attack_frame_index + 1) % self.attack_frames
-                # 새로 진입한 프레임이 1이면 발사 대기 시작
                 if not self._has_shot and not self._pending_shot and self.attack_frame_index == 1:
                     self._pending_shot = True
                     self._fire_delay_timer = self.fire_delay
-            # pending이면 지연 감소 후 발사
+
             if self._pending_shot and not self._has_shot:
                 self._fire_delay_timer -= dt
                 if self._fire_delay_timer <= 0.0 and self._attack_timer > 0.0:
@@ -149,13 +161,14 @@ class Host:
                     else:
                         bullet = HostBullet(self.x, self.y, self.x, self.y - 1)
                     game_world.add_object(bullet, 1)
+                    # HostBullet은 자체적으로 충돌 검사(수동)하므로 여기서는 충돌 페어 등록 생략
                     self._has_shot = True
                     self._pending_shot = False
+
             if self._attack_timer <= 0.0:
                 self.state = 'idle'
                 self.is_vulnerable = False
                 self._cooldown_timer = self.attack_cooldown
-                # 공격 종료 시 pending 취소
                 self._pending_shot = False
                 self._fire_delay_timer = 0.0
 
@@ -217,6 +230,12 @@ class HostBullet:
         self.life = 3.0
         self.owner = 'host'
 
+    def destroy(self):
+        try:
+            game_world.remove_object(self)
+        except Exception:
+            pass
+
     def get_bb(self):
         return self.x - 10, self.y - 10, self.x + 10, self.y + 10
 
@@ -226,13 +245,10 @@ class HostBullet:
         self.y += self.vy * dt
         self.life -= dt
         if self.life <= 0:
-            try:
-                game_world.remove_object(self)
-            except Exception:
-                pass
+            self.destroy()
             return
 
-        # 플레이어 충돌 직접 검사 (game_world의 collide와 동일 로직)
+        # 플레이어 충돌 검사
         isaac = None
         for layer in game_world.world:
             for o in layer:
@@ -246,13 +262,8 @@ class HostBullet:
             la, ba, ra, ta = self.get_bb()
             lb, bb, rb, tb = isaac.get_bb()
             if not (la > rb or ra < lb or ta < bb or ba > tb):
-                # 충돌 처리: Isaac에게 데미지 적용 (또는 handle_collision 호출)
                 isaac.handle_collision('host_bullet:isaac', self)
-
-                try:
-                    game_world.remove_object(self)
-                except Exception:
-                    pass
+                self.destroy()
 
     def draw(self):
         sx, sy = game_world.world_to_screen(self.x, self.y)
