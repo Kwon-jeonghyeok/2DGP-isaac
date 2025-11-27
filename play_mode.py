@@ -3,7 +3,6 @@ import game_framework
 import game_world
 import title_mode
 
-
 from isaac import Isaac
 from stage_1 import Stage_1
 from stage_2 import Stage_2
@@ -11,7 +10,7 @@ from host import Host
 from sucker import Sucker
 from stage_3 import Stage_3
 
-isaac =None
+isaac = None
 stage = None
 host = None
 suckers = []
@@ -24,25 +23,26 @@ def handle_events():
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             game_framework.change_mode(title_mode)
         else:
-            # isaac이 아직 생성되지 않았을 수 있으므로 안전 검사
             if isaac is not None:
                 isaac.handle_event(event)
 
 def init():
-    global isaac, stage, stage_index, host
+    global isaac, stage, stage_index, host, suckers
 
     stage = Stage_1()
-    game_world.add_object(stage,0)
+    game_world.add_object(stage, 0)
 
-    #host = Host()
     host = [Host() for i in range(3)]
 
     isaac = Isaac()
-    game_world.add_object(isaac,2)
+    game_world.add_object(isaac, 2)
     stage_index = 1
 
     game_world.add_collision_pair('isaac:host', isaac, None)
     game_world.add_collision_pair('isaac:sucker', isaac, None)
+
+    suckers = []
+
 def _remove_projectiles():
     for layer in list(game_world.world):
         for o in list(layer):
@@ -53,28 +53,21 @@ def _remove_projectiles():
                 try:
                     game_world.remove_object(o)
                 except Exception:
-                    # 이미 제거되었거나 다른 스레드 문제 등 무시
                     pass
-
 
 def update():
     global stage, stage_index, isaac, host, suckers
 
-    # 안전 검사
     if isaac is None or stage is None:
         return
 
-    # 모든 객체 업데이트
     game_world.update()
 
-    # 맵 경계 적용
     bounds = stage.get_map_bounds()
     isaac.apply_map_bounds(bounds)
 
-    vp_w = game_world.camera.get('w',1000.0)
-    vp_h = game_world.camera.get('h',800.0)
-
-
+    vp_w = game_world.camera.get('w', 1000.0)
+    vp_h = game_world.camera.get('h', 800.0)
 
     left = bounds.get('map_left', -1e9)
     right = bounds.get('map_right', 1e9)
@@ -85,8 +78,6 @@ def update():
 
     map_w = right - left
     map_h = top - bottom
-    # 카메라의 x는 맵의 좌/우 범위에 따라 제한
-    # 맵이 뷰포트보다 좁으면 맵을 뷰포트 안에서 가운데로 정렬
     if map_w <= vp_w:
         cam_x = left + (map_w - vp_w) / 2.0
     else:
@@ -100,7 +91,6 @@ def update():
     game_world.camera['x'] = cam_x
     game_world.camera['y'] = cam_y
 
-    # 충돌 처리
     game_world.handle_collision()
 
     # Stage_1 -> Stage_2
@@ -138,7 +128,7 @@ def update():
         stage_index = 1
         isaac.y = 700
 
-    # Stage_3 진입 (Stage_2 -> Stage_3)
+    # Stage_2 -> Stage_3 (진입)
     if isaac.y > 750 and stage_index == 2:
         _remove_projectiles()
         try:
@@ -156,16 +146,10 @@ def update():
         stage_index = 3
         isaac.y = 175
 
-        # Sucker 6마리 생성 및 월드/충돌페어 등록
-        suckers = [Sucker() for _ in range(6)]
-        for s in suckers:
-            game_world.add_object(s, 1)
-            # 아이작 <-> sucker 충돌 페어에 b측으로 추가
-            game_world.add_collision_pair('isaac:sucker', None, s)
-            # 아이작의 눈물(Tear)과 충돌하도록 호스트 그룹 재사용
-            game_world.add_collision_pair('host:tear', s, None)
+        # Sucker 6마리 생성 및 등록(클래스 메서드 사용)
+        suckers = Sucker.spawn_many(6, depth=1)
 
-    # Stage_3 -> Stage_2 (이탈 시 sucker 제거)
+    # Stage_3 -> Stage_2 (이탈 시 sucker 안전 제거)
     if isaac.y < 125 and stage_index == 3:
         _remove_projectiles()
         try:
@@ -173,17 +157,10 @@ def update():
         except ValueError:
             pass
 
-        # suckers 안전 제거
+        # Sucker들에게 제거 책임을 맡기고 리스트 초기화
         for s in list(suckers):
             try:
-                game_world.remove_object(s)
-            except Exception:
-                pass
-            try:
-                # 내부 추적 리스트 정리
-                from sucker import Sucker as _SuckerCls
-                if s in _SuckerCls._instances:
-                    _SuckerCls._instances.remove(s)
+                s.destroy()
             except Exception:
                 pass
         suckers = []
@@ -196,16 +173,12 @@ def update():
             game_world.add_collision_pair('isaac:host', None, h)
             game_world.add_collision_pair('host:tear', h, None)
 
-
-    if isaac.hp <=0:
+    if isaac.hp <= 0:
         _remove_projectiles()
         game_world.clear()
         stage_index = 1
         stage = Stage_1()
         game_framework.change_mode(title_mode)
-
-    pass
-
 
 def draw():
     clear_canvas()
@@ -213,8 +186,13 @@ def draw():
     update_canvas()
 
 def finish():
+    # 모든 객체 정리
+    for s in list(suckers):
+        try:
+            s.destroy()
+        except Exception:
+            pass
     game_world.clear()
-    pass
 
 def pause(): pass
 def resume(): pass
