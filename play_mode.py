@@ -148,7 +148,7 @@ def update():
         common.isaac.y = 175
 
         # Sucker 6마리 생성 및 등록(클래스 메서드 사용)
-        suckers = Sucker.spawn_many(6, depth=1)
+        suckers = Sucker.spawn_many(4, depth=1)
 
     # Stage_3 -> Stage_2 (이탈 시 sucker 안전 제거)
     if common.isaac.y < 125 and stage_index == 3:
