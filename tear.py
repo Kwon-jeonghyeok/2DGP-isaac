@@ -29,13 +29,12 @@ class Tear:
         # 폭발 프레임 수: 총 8프레임 (첫 4는 같은 행, 다음 4는 같은 x에서 y만 아래)
         self.EXPLOSION_FRAMES = 8
 
+        self.consumed = False
+
     def draw(self):
         sx, sy = game_world.world_to_screen(self.x, self.y)
         if self.moving:
-
             self.image.clip_draw(280, 215, 30, 30, sx, sy, 40, 40)
-            # self.image.clip_draw(int(self.frame) * 32 + 300, 215, 32, 30, self.x, self.y, 45, 45)
-
         else:
             # 폭발 애니메이션: 총 8프레임
             frame_index = int(self.explosion_frame)
@@ -130,11 +129,16 @@ class Tear:
             return self.x - 10, self.y - 6, self.x , self.y
 
     def handle_collision(self, group, other):
-        if group == 'host:tear':
 
+        if group in ('host:tear', 'sucker:tear'):
+            if self.consumed:
+                return
+            self.consumed = True
             self.moving = False
             self.explosion_frame = 0.0
-        if group == 'sucker:tear':
-            self.moving = False
-            self.explosion_frame = 0.0
+            try:
+                game_world.remove_collision_object(self)
+            except Exception:
+                pass
+            return
         pass
