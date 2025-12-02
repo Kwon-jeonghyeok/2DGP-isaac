@@ -71,10 +71,10 @@ class Sucker:
         self.tx, self.ty = 0, 0
         self.build_behavior_tree()
 
-
+    """
     @classmethod
     def spawn_many(cls, count, depth=1):
-        """Sucker 인스턴스들을 생성해서 game_world에 추가하고 충돌페어를 등록하여 리스트로 반환한다."""
+        #Sucker 인스턴스들을 생성해서 game_world에 추가하고 충돌페어를 등록하여 리스트로 반환한다.
         spawned = []
         for _ in range(count):
             s = cls()
@@ -85,6 +85,7 @@ class Sucker:
             game_world.add_collision_pair('sucker:tear', s, None)
             spawned.append(s)
         return spawned
+        """
 
     def destroy(self):
         """game_world에서 제거하고 내부 추적 리스트에서 자신을 제거."""

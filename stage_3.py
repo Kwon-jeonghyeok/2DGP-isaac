@@ -13,12 +13,12 @@ class Stage_3:
     def get_map_bounds(self):
         return {
             'map_left': 100,
-            'map_right': 1500,
+            'map_right': 1475,
             'map_bottom': 175,
             'map_top': 700,
             'notches': [
 
-                {'x': 1500, 'y': 400, 'w': 50, 'h': 70},
+                {'x': 1475, 'y': 400, 'w': 50, 'h': 70},
                 {'x': 490, 'y': 175, 'w': 50, 'h': 50},
             ]
         }
@@ -73,8 +73,8 @@ class Stage_3:
         cx = (left + right) / 2.0
         cy = (bottom + top) / 2.0
 
-        frame_w = 300.0
-        frame_h = 200.0
+        frame_w = 800.0
+        frame_h = 360.0
         thickness = 40.0
         spacing = 48.0
 
