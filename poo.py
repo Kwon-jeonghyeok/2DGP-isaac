@@ -22,26 +22,36 @@ class Poo:
         pass
 
     def draw(self):
+        if self.destroyed:
+            return
         sx, sy = game_world.world_to_screen(self.x, self.y)
         if Poo.image:
             Poo.image.draw(sx, sy, self.w, self.h)
         else:
-            draw_rectangle(sx - self.w/2, sy - self.h/2, sx + self.w/2, sy + self.h/2)
-
-        l, b, r, t = self.get_bb()
-        ls, bs = game_world.world_to_screen(l, b)
-        rs, ts = game_world.world_to_screen(r, t)
-        draw_rectangle(ls, bs, rs, ts)
+            draw_rectangle(sx - self.w / 2, sy - self.h / 2,
+                           sx + self.w / 2, sy + self.h / 2)
 
     def get_bb(self):
-        return (self.x - self.w/2, self.y - self.h/2, self.x + self.w/2, self.y + self.h/2)
+        if self.destroyed:
+            # 이미 파괴된 경우, 충돌 안 나도록 0 영역 반환
+            return 0, 0, 0, 0
+        return (self.x - self.w / 2, self.y - self.h / 2,
+                self.x + self.w / 2, self.y + self.h / 2)
+    def destroy(self):
+        # 월드와 충돌쌍에서 제거
+        try:
+            game_world.remove_object(self)
+        except Exception:
+            pass
+        self.destroyed = True
+
 
     def handle_collision(self, group, other):
         # 오직 눈물 그룹과 충돌할 때만 제거
         if ':tear' in group:
             if self.destroyed:
                 return
-            self.destroyed = True
+            self.destroy()
             try:
                 game_world.remove_collision_object(self)
             except Exception:
@@ -51,3 +61,5 @@ class Poo:
             except Exception:
                 pass
         return
+
+

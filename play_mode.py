@@ -16,6 +16,7 @@ stage = None
 host = None
 sucker = None
 stage_index = 1
+stage_3_instance = None
 def handle_events():
     event_list = get_events()
     for event in event_list:
@@ -28,7 +29,7 @@ def handle_events():
                 common.isaac.handle_event(event)
 
 def init():
-    global isaac, stage, stage_index, host, sucker
+    global isaac, stage, stage_index, host, sucker, stage_3_instance
 
     stage = Stage_1()
     game_world.add_object(stage, 0)
@@ -38,6 +39,7 @@ def init():
     common.isaac = Isaac()
     game_world.add_object(common.isaac, 2)
     stage_index = 1
+    stage_3_instance = Stage_3()
 
     game_world.add_collision_pair('isaac:host', common.isaac, None)
     game_world.add_collision_pair('isaac:sucker', common.isaac, None)
@@ -57,7 +59,7 @@ def _remove_projectiles():
                     pass
 
 def update():
-    global stage, stage_index, isaac, host, sucker
+    global stage, stage_index, isaac, host, sucker, stage_3_instance
 
     if common.isaac is None or stage is None:
         return
@@ -142,7 +144,9 @@ def update():
         except ValueError:
             pass
 
-        stage = Stage_3()
+        stage = stage_3_instance
+        if hasattr(stage, 'ensure_obstacles'):
+            stage.ensure_obstacles()
         game_world.add_object(stage, 0)
         stage_index = 3
         common.isaac.y = 175
@@ -166,6 +170,12 @@ def update():
     if common.isaac.y < 125 and stage_index == 3:
         _remove_projectiles()
         try:
+            try:
+                if hasattr(stage, 'clear_obstacles'):
+                    stage.clear_obstacles()
+            except Exception:
+                pass
+
             game_world.remove_object(stage)
             for s in sucker:
                 try:
