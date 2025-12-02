@@ -307,6 +307,7 @@ class Isaac:
             game_world.add_object(tear, 1)
             game_world.add_collision_pair('host:tear', None, tear)
             game_world.add_collision_pair('sucker:tear', None, tear)
+            game_world.add_collision_pair('poo:tear', None, tear)
             self.tear_cooldown = self.tear_reload
 
     def draw_hp(self):
@@ -387,15 +388,118 @@ class Isaac:
         self.state_machine.handle_state_event(('INPUT', event))
 
     def handle_collision(self, group, other):
-        if group == 'isaac:host':
-            self.take_damage(1)
-
-        if group == 'host_bullet:isaac':
-            self.take_damage(1)
-            return
-        if group == 'isaac:sucker':
-            self.take_damage(1)
+        # 기존 피해 처리: 기존 self.take_damage 유지
+        if group in ('isaac:host', 'host_bullet:isaac', 'isaac:sucker'):
+            try:
+                self.take_damage(1)
+            except Exception:
+                pass
             return
 
-        pass
+        # 장애물(Rock, Poo)과의 충돌: 스냅 방식으로 보정하여 흔들림 최소화
+        if group in ('isaac:rock', 'isaac:poo'):
+            try:
+                if other is None:
+                    return
+                if not hasattr(other, 'get_bb') or not hasattr(self, 'get_bb'):
+                    return
+
+                l_a, b_a, r_a, t_a = self.get_bb()
+                l_b, b_b, r_b, t_b = other.get_bb()
+
+                # 침투량 계산
+                overlap_x = min(r_a, r_b) - max(l_a, l_b)
+                overlap_y = min(t_a, t_b) - max(b_a, b_b)
+
+                if overlap_x <= 0 or overlap_y <= 0:
+                    return
+
+                # 작은 진동을 제거하기 위한 임계값 및 여유
+                TOLERANCE = 0.5  # 이보다 작은 침투는 스냅 처리
+                EPS = 1.0  # 밖으로 떨어뜨리는 여유(진동 방지)
+
+                # Isaac의 축별 오프셋(중심에서 각 엣지까지 거리)
+                left_offset = self.x - l_a
+                right_offset = r_a - self.x
+                bottom_offset = self.y - b_a
+                top_offset = t_a - self.y
+
+                # 더 작은 축으로만 보정하되 '스냅'으로 위치를 정확히 엣지 바깥으로 설정
+                if overlap_x < overlap_y:
+                    # 수평 보정: Isaac의 중심을 비교하여 어느 쪽으로 밀어낼지 결정
+                    center_ax = (l_a + r_a) / 2.0
+                    center_bx = (l_b + r_b) / 2.0
+                    if center_ax < center_bx:
+                        # Isaac이 왼쪽 -> 오른쪽 장애물의 왼쪽 엣지 기준으로 오른쪽을 벗어나게 스냅
+                        # r_a_new = l_b - EPS  => self.x = r_a_new - right_offset
+                        self.x = (l_b - EPS) - right_offset
+                    else:
+                        # Isaac이 오른쪽 -> 왼쪽 엣지 기준으로 왼쪽을 벗어나게 스냅
+                        # l_a_new = r_b + EPS => self.x = l_a_new + left_offset
+                        self.x = (r_b + EPS) + left_offset
+                else:
+                    # 수직 보정
+                    center_ay = (b_a + t_a) / 2.0
+                    center_by = (b_b + t_b) / 2.0
+                    if center_ay < center_by:
+                        # Isaac이 아래 -> 위 장애물의 아래 엣지 기준으로 아래로 스냅
+                        # t_a_new = b_b - EPS => self.y = t_a_new - top_offset
+                        self.y = (b_b - EPS) - top_offset
+                    else:
+                        # Isaac이 위 -> 아래 엣지 기준으로 위로 스냅
+                        # b_a_new = t_b + EPS => self.y = b_a_new + bottom_offset
+                        self.y = (t_b + EPS) + bottom_offset
+
+                # 아주 미세한 잔여 침투가 남았으면 추가로 한 번 더 스냅(안정성)
+                try:
+                    l_a2, b_a2, r_a2, t_a2 = self.get_bb()
+                    if min(r_a2, r_b) - max(l_a2, l_b) > 0 and min(t_a2, t_b) - max(b_a2, b_b) > 0:
+                        # 남아있으면 강제 완전 분리: 큰 EPS 로 한 번 더 밀어냄
+                        BIG_EPS = 4.0
+                        # 가로 우선으로 시도
+                        if overlap_x <= overlap_y:
+                            center_ax = (l_a2 + r_a2) / 2.0
+                            center_bx = (l_b + r_b) / 2.0
+                            if center_ax < center_bx:
+                                self.x = (l_b - BIG_EPS) - (r_a2 - self.x)
+                            else:
+                                self.x = (r_b + BIG_EPS) + (self.x - l_a2)
+                        else:
+                            center_ay = (b_a2 + t_a2) / 2.0
+                            center_by = (b_b + t_b) / 2.0
+                            if center_ay < center_by:
+                                self.y = (b_b - BIG_EPS) - (t_a2 - self.y)
+                            else:
+                                self.y = (t_b + BIG_EPS) + (self.y - b_a2)
+                except Exception:
+                    pass
+
+                # 맵 경계 재적용(있으면)
+                try:
+                    bounds = None
+                    for layer in game_world.world:
+                        for o in layer:
+                            if hasattr(o, 'get_map_bounds'):
+                                try:
+                                    bounds = o.get_map_bounds()
+                                    break
+                                except Exception:
+                                    bounds = None
+                        if bounds:
+                            break
+                    if bounds:
+                        try:
+                            self.apply_map_bounds(bounds)
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+
+            except Exception:
+                pass
+            return
+
+        # 그 외 그룹은 무시
+        return
+
 

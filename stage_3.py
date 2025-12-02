@@ -1,10 +1,14 @@
 from pico2d import load_image
 import game_world
+import common
+from rock import Rock
+from poo import Poo
 
 class Stage_3:
     def __init__(self):
         self.image = load_image('resource/rooms/Rooms_Caves_2.png')
         self.image2 = load_image('resource/objects/Door_1.png')
+        self._create_central_frame()
 
     def get_map_bounds(self):
         return {
@@ -58,3 +62,77 @@ class Stage_3:
 
 
         pass
+
+    def _create_central_frame(self):
+        bounds = self.get_map_bounds()
+        left = bounds.get('map_left', 100)
+        right = bounds.get('map_right', 1500)
+        bottom = bounds.get('map_bottom', 175)
+        top = bounds.get('map_top', 700)
+
+        cx = (left + right) / 2.0
+        cy = (bottom + top) / 2.0
+
+        frame_w = 300.0
+        frame_h = 200.0
+        thickness = 40.0
+        spacing = 48.0
+
+        half_w = frame_w / 2.0
+        half_h = frame_h / 2.0
+
+        rocks = []
+        poos = []
+
+        # top side
+        x = cx - half_w + thickness / 2.0
+        while x <= cx + half_w - thickness / 2.0:
+            rocks.append(Rock(x, cy + half_h - thickness / 2.0, thickness, thickness))
+            x += spacing
+
+        # bottom side
+        x = cx - half_w + thickness / 2.0
+        while x <= cx + half_w - thickness / 2.0:
+            rocks.append(Rock(x, cy - half_h + thickness / 2.0, thickness, thickness))
+            x += spacing
+
+        # left side
+        y = cy - half_h + thickness / 2.0
+        while y <= cy + half_h - thickness / 2.0:
+            rocks.append(Rock(cx - half_w + thickness / 2.0, y, thickness, thickness))
+            y += spacing
+
+        # right side
+        y = cy - half_h + thickness / 2.0
+        while y <= cy + half_h - thickness / 2.0:
+            rocks.append(Rock(cx + half_w - thickness / 2.0, y, thickness, thickness))
+            y += spacing
+
+        # 면 중앙에 Poo 배치 (top, bottom, left, right)
+        poos.append(Poo(cx, cy + half_h - thickness / 2.0))
+        poos.append(Poo(cx, cy - half_h + thickness / 2.0))
+        poos.append(Poo(cx - half_w + thickness / 2.0, cy))
+        poos.append(Poo(cx + half_w - thickness / 2.0, cy))
+
+        # 충돌 그룹 생성(가능하면 Isaac 객체로 초기화)
+        if common.isaac is not None:
+            game_world.add_collision_pair('isaac:rock', common.isaac, None)
+            game_world.add_collision_pair('isaac:poo', common.isaac, None)
+        else:
+            # Isaac이 아직 없으면 키만 생성
+            game_world.add_collision_pair('isaac:rock', None, None)
+            game_world.add_collision_pair('isaac:poo', None, None)
+
+        # Poo가 Tear과 충돌하도록 그룹 생성 (left에 poo 추가)
+        game_world.add_collision_pair('poo:tear', None, None)
+
+        # 게임월드에 추가 및 충돌페어 등록
+        for r in rocks:
+            game_world.add_object(r, 1)
+            game_world.add_collision_pair('isaac:rock', None, r)
+
+        for p in poos:
+            game_world.add_object(p, 1)
+            game_world.add_collision_pair('isaac:poo', None, p)
+            # poo:tear의 왼쪽에 poo 등록
+            game_world.add_collision_pair('poo:tear', p, None)
