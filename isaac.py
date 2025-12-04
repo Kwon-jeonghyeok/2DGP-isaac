@@ -166,7 +166,7 @@ class Isaac:
         self.hurt_visible = True
 
 
-        self.tear_reload = 0.5  # 재장전 시간(초)
+        self.tear_reload = 0.3  # 재장전 시간(초)
         self.tear_cooldown = 0.0  # 남은 쿨다운(초)
 
         self.image = load_image('resource/isaac.png')
@@ -310,6 +310,7 @@ class Isaac:
             game_world.add_collision_pair('sucker:tear', None, tear)
             game_world.add_collision_pair('poo:tear', None, tear)
             game_world.add_collision_pair('rock:tear', None, tear)
+            game_world.add_collision_pair('charger:tear', None, tear)
             self.tear_cooldown = self.tear_reload
 
     def draw_hp(self):
@@ -391,7 +392,7 @@ class Isaac:
 
     def handle_collision(self, group, other):
         # 기존 피해 처리: self.take_damage 그대로 유지
-        if group in ('isaac:host', 'host_bullet:isaac', 'isaac:sucker'):
+        if group in ('isaac:host', 'host_bullet:isaac', 'isaac:sucker', 'isaac:charger'):
             try:
                 self.take_damage(1)
             except Exception:

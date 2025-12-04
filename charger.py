@@ -44,7 +44,6 @@ class Charger:
 
         self.frame = 0.0
         self.hp = 3
-
         self.state = STATE_WANDER
         self.dir = random.choice([(1, 0), (-1, 0), (0, 1), (0, -1)])
         self.timer = 0
