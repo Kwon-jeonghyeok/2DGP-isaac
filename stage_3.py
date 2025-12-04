@@ -35,7 +35,6 @@ class Stage_3:
         }
 
     def update(self):
-        # Stage\_3 자체는 별도 업데이트 없음
         pass
 
     def draw(self):
@@ -52,10 +51,9 @@ class Stage_3:
 
         sx, sy = game_world.world_to_screen(center_x, center_y)
         if self.image:
-            # 세로는 화면 높이(800)에 맞추고, 가로는 맵 폭에 맞춤
             self.image.draw(sx, sy, map_w, 800)
 
-        # 문 그리기(월드 좌표 기준 -> 스크린 보정)
+        # 문 그리기
         if self.image2:
             door_world_x = 500
             door_world_y = 120
@@ -66,11 +64,9 @@ class Stage_3:
             self.image2.clip_composite_draw(50, 40, 50, 52, 0, 'v', dx2, dy2, 130, 120)
 
     def ensure_obstacles(self):
-        # 1) Rock 이 비어 있으면 새로 생성
         if not self.rocks:
             self._create_rocks_and_poos(initial=(len(self.poos) == 0))
         else:
-            # Rock 이 이미 있다면, 월드에 다시 추가만 필요할 수 있음
             for r in self.rocks:
                 try:
                     game_world.add_object(r, 1)
@@ -96,7 +92,6 @@ class Stage_3:
         # 4) 아직 안 부서진 Poo 만 다시 월드에 추가
         for p in self.poos:
             if getattr(p, 'destroyed', False):
-                # 이미 부서진 Poo 는 다시 추가하지 않음
                 continue
             if p in sum(game_world.world, []):
                 continue
@@ -108,7 +103,6 @@ class Stage_3:
                 pass
 
     def _create_rocks_and_poos(self, initial=True):
-
         bounds = self.get_map_bounds()
         left = bounds.get('map_left', 100)
         right = bounds.get('map_right', 1475)
@@ -120,60 +114,39 @@ class Stage_3:
 
         frame_w = 800.0
         frame_h = 360.0
-        thickness = 60.0
+        thickness = 70.0  # Rock 크기
 
         half_w = frame_w / 2.0
         half_h = frame_h / 2.0
 
-        # Rock 리스트는 새로 구성
         self.rocks.clear()
 
-        # Poo 위치 계산 (사용자 변경 X)
+        # Poo 위치 계산
         top_y = cy + half_h - thickness / 2.0
         bottom_y = cy - half_h + thickness / 2.0
-        left_x = cx - half_w + thickness / 2.0
-        right_x = cx + half_w - thickness / 2.0
+        left_x = cx - half_w + thickness / 2.0 + 27
+        right_x = cx + half_w - thickness / 2.0 - 27
 
-        # 수동 오프셋 목록 (cx, cy 기준). 직접 수정해서 원하는 좌표를 하나하나 지정할 수 있음.
-        # 각 항목은 (dx, dy)로, 실제 좌표는 (cx + dx, cy + dy).
-        # 예: ( -380, top_offset ) 같은 방식으로 직관적으로 배치 가능.
-        top_offset = top_y - cy
-        bottom_offset = bottom_y - cy
 
         manual_offsets = [
-            # top row (dx, top_offset)
-            (-380, top_offset), (-284, top_offset), (-188, top_offset), (-92, top_offset),
-            (100, top_offset), (196, top_offset), (292, top_offset),(388 , top_offset),
+            # top row
+            (-335, top_y - cy + 20), (-249, top_y - cy + 20), (-163, top_y - cy + 20), (-77, top_y - cy + 20),
+            (85, top_y - cy + 20), (171, top_y - cy + 20), (257, top_y - cy + 20), (343, top_y - cy + 20),
 
             # bottom row
-            (-380, bottom_offset), (-284, bottom_offset), (-188, bottom_offset), (-92, bottom_offset),
-            (100, bottom_offset), (196, bottom_offset), (292, bottom_offset),(388, bottom_offset),
+            (-335, bottom_y - cy), (-249, bottom_y - cy), (-163, bottom_y - cy), (-77, bottom_y - cy),
+            (85, bottom_y - cy), (171, bottom_y - cy), (257, bottom_y - cy), (343, bottom_y - cy),
 
-            # left column (left_offset, dy)
-             (-380, -64),(-380, 76),
+            # left column
+            (-335, -74), (-335, 86),
 
-            # right column (right_offset, dy)
-            (388, -64), (388, 76),
+            # right column
+            (343, -74), (343, 86),
         ]
 
-        # Poo 좌표 목록(겹침 방지용)
-        poo_positions = {
-            (round(cx, 3), round(top_y, 3)),
-            (round(cx, 3), round(bottom_y, 3)),
-            (round(left_x, 3), round(cy, 3)),
-            (round(right_x, 3), round(cy, 3)),
-        }
-
-        eps = 1e-2
-
-        # manual_offsets를 실제 좌표로 변환하여 Rock 생성
         for dx, dy in manual_offsets:
             x = cx + dx
             y = cy + dy
-            # Poo 위치와 겹치면 건너뜀
-            key = (round(x, 3), round(y, 3))
-            if key in poo_positions:
-                continue
             r = Rock(x, y, thickness, thickness)
             self.rocks.append(r)
             try:
@@ -181,16 +154,14 @@ class Stage_3:
             except Exception:
                 pass
 
-        # Poo 는 처음 진입(initial=True)일 때만 생성
         if initial:
             self.poos.clear()
-            p_top = Poo(cx, top_y)
+            p_top = Poo(cx, top_y + 20)
             p_bottom = Poo(cx, bottom_y)
             p_left = Poo(left_x, cy)
             p_right = Poo(right_x, cy)
             self.poos.extend([p_top, p_bottom, p_left, p_right])
 
-            # 아직 안 부서진 상태이므로 바로 월드에 추가
             for p in self.poos:
                 try:
                     game_world.add_object(p, 1)
@@ -199,11 +170,11 @@ class Stage_3:
                     else:
                         game_world.add_collision_pair('isaac:poo', None, p)
                     game_world.add_collision_pair('poo:tear', p, None)
+
                 except Exception:
                     pass
 
     def clear_obstacles(self):
-
         # Rock 완전 제거
         for r in list(self.rocks):
             try:
@@ -217,5 +188,4 @@ class Stage_3:
             try:
                 game_world.remove_object(p)
             except Exception:
-                # 이미 제거된 경우 등은 무시
                 pass

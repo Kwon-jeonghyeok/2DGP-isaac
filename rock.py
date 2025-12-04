@@ -5,7 +5,7 @@ import game_world
 class Rock:
     image = None
 
-    def __init__(self, x, y, w=60, h=60):
+    def __init__(self, x, y, w=80, h=80):
         if Rock.image is None:
             try:
                 Rock.image = load_image('resource/objects/Rock.png')
