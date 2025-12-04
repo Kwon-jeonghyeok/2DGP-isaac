@@ -159,8 +159,8 @@ class Stage_3:
             self.poos.clear()
             p_top = Poo(cx, top_y + 20)
             p_bottom = Poo(cx, bottom_y)
-            p_left = Poo(left_x, cy)
-            p_right = Poo(right_x, cy)
+            p_left = Poo(left_x+3, cy)
+            p_right = Poo(right_x+5, cy)
             self.poos.extend([p_top, p_bottom, p_left, p_right])
 
             for p in self.poos:

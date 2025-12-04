@@ -6,7 +6,7 @@ class Poo:
     image = None
     FRAMES = 5
 
-    def __init__(self, x, y, w=80, h=80):
+    def __init__(self, x, y, w=70, h=70):
         if Poo.image is None:
             try:
                 Poo.image = load_image('resource/objects/Poop.png')
@@ -34,9 +34,14 @@ class Poo:
             fw = int(Poo.image.w // Poo.FRAMES)
             fh = int(Poo.image.h)
             Poo.image.clip_draw(self.frame * fw, 0, fw, fh, sx, sy, self.w, self.h)
+
         else:
             draw_rectangle(sx - self.w / 2, sy - self.h / 2,
                            sx + self.w / 2, sy + self.h / 2)
+        l, b, r, t = self.get_bb()
+        ls, bs = game_world.world_to_screen(l, b)
+        rs, ts = game_world.world_to_screen(r, t)
+        draw_rectangle(ls, bs, rs, ts)
 
     def get_bb(self):
         # 충돌 판정이 비활성화된 경우 0 영역 반환

@@ -9,12 +9,14 @@ from stage_2 import Stage_2
 from host import Host
 from sucker import Sucker
 from stage_3 import Stage_3
+from charger import Charger
 import common
 
 #isaac = None
 stage = None
 host = None
 sucker = None
+chargers = None
 stage_index = 1
 stage_3_instance = None
 def handle_events():
@@ -29,7 +31,7 @@ def handle_events():
                 common.isaac.handle_event(event)
 
 def init():
-    global isaac, stage, stage_index, host, sucker, stage_3_instance
+    global isaac, stage, stage_index, host, sucker, stage_3_instance, chargers
 
     stage = Stage_1()
     game_world.add_object(stage, 0)
@@ -41,8 +43,11 @@ def init():
     stage_index = 1
     stage_3_instance = Stage_3()
 
+    chargers = [Charger() for _ in range(2)]
+
     game_world.add_collision_pair('isaac:host', common.isaac, None)
     game_world.add_collision_pair('isaac:sucker', common.isaac, None)
+    game_world.add_collision_pair('isaac:charger', common.isaac, None)
 
 
 
@@ -59,7 +64,7 @@ def _remove_projectiles():
                     pass
 
 def update():
-    global stage, stage_index, isaac, host, sucker, stage_3_instance
+    global stage, stage_index, isaac, host, sucker, stage_3_instance, chargers
 
     if common.isaac is None or stage is None:
         return
@@ -166,6 +171,24 @@ def update():
                 game_world.add_collision_pair('sucker:tear', s, None)
             except Exception:
                 pass
+        if chargers:
+            for c in list(chargers):
+                if getattr(c, 'hp', 1) <= 0:
+                    try:
+                        chargers.remove(c)
+                    except ValueError:
+                        pass
+                    continue
+                try:
+                    game_world.add_object(c, 1)
+                    # isaac 충돌 그룹과 charger:tear 등록
+                    if common.isaac is not None:
+                        game_world.add_collision_pair('isaac:charger', common.isaac, c)
+                    else:
+                        game_world.add_collision_pair('isaac:charger', None, c)
+                    game_world.add_collision_pair('charger:tear', c, None)
+                except Exception:
+                    pass
     # Stage_3 -> Stage_2 (이탈 시 sucker 안전 제거)
     if common.isaac.y < 125 and stage_index == 3:
         _remove_projectiles()
@@ -180,6 +203,12 @@ def update():
             for s in sucker:
                 try:
                     game_world.remove_object(s)
+                except Exception:
+                    pass
+
+            for c in chargers:
+                try:
+                    game_world.remove_object(c)
                 except Exception:
                     pass
         except ValueError:
@@ -212,6 +241,11 @@ def finish():
     for s in list(sucker):
         try:
             s.destroy()
+        except Exception:
+            pass
+    for c in list(chargers):
+        try:
+            c.destroy()
         except Exception:
             pass
     game_world.clear()
