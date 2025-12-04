@@ -309,6 +309,7 @@ class Isaac:
             game_world.add_collision_pair('host:tear', None, tear)
             game_world.add_collision_pair('sucker:tear', None, tear)
             game_world.add_collision_pair('poo:tear', None, tear)
+            game_world.add_collision_pair('rock:tear', None, tear)
             self.tear_cooldown = self.tear_reload
 
     def draw_hp(self):

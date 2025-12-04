@@ -86,6 +86,7 @@ class Stage_3:
         for r in self.rocks:
             try:
                 game_world.add_collision_pair('isaac:rock', None, r)
+                game_world.add_collision_pair('rock:tear', r, None)
             except Exception:
                 pass
 
