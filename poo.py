@@ -6,7 +6,7 @@ class Poo:
     image = None
     FRAMES = 5
 
-    def __init__(self, x, y, w=40, h=40):
+    def __init__(self, x, y, w=60, h=60):
         if Poo.image is None:
             try:
                 Poo.image = load_image('resource/objects/Poop.png')
