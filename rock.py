@@ -5,10 +5,10 @@ import game_world
 class Rock:
     image = None
 
-    def __init__(self, x, y, w=40, h=40):
+    def __init__(self, x, y, w=60, h=60):
         if Rock.image is None:
             try:
-                Rock.image = load_image('resource/objects/rock.png')
+                Rock.image = load_image('resource/objects/Rock.png')
             except Exception:
                 Rock.image = None
         self.x = float(x)
