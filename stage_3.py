@@ -21,6 +21,7 @@ class Stage_3:
         # Rock 과 Poo 를 분리 관리
         self.rocks = []
         self.poos = []
+        self.coins = []
 
         self.is_cleared = False
 
@@ -114,6 +115,10 @@ class Stage_3:
                 game_world.add_collision_pair('poo:tear', p, None)
             except Exception:
                 pass
+        for c in self.coins:
+            if c not in sum(game_world.world, []):
+                game_world.add_object(c, 1)
+                game_world.add_collision_pair('isaac:coin', common.isaac, c)
 
     def _create_rocks_and_poos(self, initial=True):
         bounds = self.get_map_bounds()
@@ -202,3 +207,5 @@ class Stage_3:
                 game_world.remove_object(p)
             except Exception:
                 pass
+        for c in self.coins:
+            game_world.remove_object(c)

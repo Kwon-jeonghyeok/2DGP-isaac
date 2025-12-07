@@ -3,7 +3,7 @@ import game_world
 import common
 from rock import Rock
 from poo import Poo
-
+from coin import Coin
 
 class Stage_2:
     def __init__(self):
@@ -12,6 +12,7 @@ class Stage_2:
 
         self.rocks = []
         self.poos = []
+        self.coins = []
 
         self.is_cleared = False
 
@@ -76,6 +77,10 @@ class Stage_2:
                 self.rocks.append(Rock(rx, ry))
             for (px, py) in self.manual_poo_positions:
                 self.poos.append(Poo(px, py))
+        for c in self.coins:
+            if c not in sum(game_world.world, []):
+                game_world.add_object(c, 1)
+                game_world.add_collision_pair('isaac:coin', common.isaac, c)
 
         # 2. 게임 월드에 추가 및 충돌 처리 등록
         # Rock
@@ -110,3 +115,5 @@ class Stage_2:
         # Poo 제거
         for p in self.poos:
             game_world.remove_object(p)
+        for c in self.coins:
+            game_world.remove_object(c)

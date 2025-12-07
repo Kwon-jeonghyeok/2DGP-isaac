@@ -312,6 +312,8 @@ class Charger:
                     coin = Coin(self.x, self.y)
                     game_world.add_object(coin, 1)
                     game_world.add_collision_pair('isaac:coin', None, coin)
+                    if common.stage and hasattr(common.stage, 'coins'):
+                        common.stage.coins.append(coin)
                 self.destroy()
 
     def destroy(self):

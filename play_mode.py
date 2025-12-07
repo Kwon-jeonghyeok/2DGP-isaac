@@ -35,6 +35,7 @@ def init():
     global isaac, stage, stage_index, host, sucker, stage_3_instance, chargers, stage_2_instance
 
     stage = Stage_1()
+    common.stage = stage
     game_world.add_object(stage, 0)
 
     host = [Host() for i in range(3)]
@@ -129,11 +130,12 @@ def update():
         except ValueError:
             pass
         stage = stage_2_instance
+        common.stage = stage
         game_world.add_object(stage, 0)
         if hasattr(stage, 'ensure_obstacles'):
             stage.ensure_obstacles()
         stage_index = 2
-
+        host = [h for h in host if h.hp > 0]
         for h in host:
             # 돌, 똥이 이미 깔려 있으므로 이를 인식해서 안전한 곳으로 감
             h.set_safe_position()
@@ -157,6 +159,7 @@ def update():
         except ValueError:
             pass
         stage = Stage_1()
+        common.stage = stage
         game_world.add_object(stage, 0)
         stage_index = 1
         common.isaac.y = 700
@@ -177,6 +180,7 @@ def update():
             pass
 
         stage = stage_3_instance
+        common.stage = stage
         if hasattr(stage, 'ensure_obstacles'):
             stage.ensure_obstacles()
         game_world.add_object(stage, 0)
@@ -243,12 +247,15 @@ def update():
 
 
         stage = stage_2_instance
+        common.stage = stage
         game_world.add_object(stage, 0)
 
         if hasattr(stage, 'ensure_obstacles'):
             stage.ensure_obstacles()
         stage_index = 2
         common.isaac.y = 700
+
+        host = [h for h in host if h.hp > 0]
         for h in host:
             h.set_safe_position()
             game_world.add_object(h, 1)
@@ -260,6 +267,7 @@ def update():
         game_world.clear()
         stage_index = 1
         stage = Stage_1()
+        common.stage = stage
         game_framework.change_mode(title_mode)
 
 def draw():

@@ -3,6 +3,7 @@ import game_world
 import random
 from pico2d import *
 from coin import Coin
+import common
 TIME_PER_ACTION = 0.5
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 10.0
@@ -151,6 +152,8 @@ class Host:
                 coin = Coin(self.x, self.y)
                 game_world.add_object(coin, 1)
                 game_world.add_collision_pair('isaac:coin', None, coin)
+                if common.stage and hasattr(common.stage, 'coins'):
+                    common.stage.coins.append(coin)
             self.destroy()
             return
 
@@ -237,6 +240,7 @@ class Host:
         if group == 'host:tear' or group == 'host_bullet:isaac':
             if self.is_vulnerable:
                 self.hp -= 1
+
 
 
 class HostBullet:

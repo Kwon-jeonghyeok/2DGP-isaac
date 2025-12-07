@@ -1,5 +1,6 @@
 from pico2d import *
 import game_world
+import common
 
 
 class Coin:
@@ -41,3 +42,6 @@ class Coin:
     def handle_collision(self, group, other):
         if group == 'isaac:coin':
             game_world.remove_object(self)
+            if common.stage and hasattr(common.stage, 'coins'):
+                if self in common.stage.coins:
+                    common.stage.coins.remove(self)
