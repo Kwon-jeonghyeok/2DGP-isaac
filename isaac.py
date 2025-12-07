@@ -158,7 +158,7 @@ class Isaac:
         #코인 개수 및 폰트 로드
         self.coin_count = 0
         try:
-            self.font = load_font('resource/ariblk.ttf', 24)
+            self.font = load_font('resource/upheaval-tt-brk.upheaval-tt-brk.ttf', 24)
         except Exception:
             self.font = None
 
