@@ -1,9 +1,10 @@
 from pico2d import load_image, draw_rectangle
 import game_world
 import random
-import math
 import game_framework
 import common
+from behavior_tree import BehaviorTree, Action, Sequence, Condition, Selector
+
 
 PIXEL_PER_METER = (10.0 / 0.3)
 RUN_SPEED_KMPH = 10.0
@@ -14,10 +15,11 @@ RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
 WANDER_SPEED_PPS = RUN_SPEED_PPS * 0.7
 CHARGE_SPEED_PPS = RUN_SPEED_PPS * 1.5  # 돌진 속도
 
+# 상태 상수
 STATE_WANDER = 0
 STATE_CHARGE = 1
 
-ALIGN_TOL = 32  # 축 정렬 허용 범위 (이 범위를 벗어나면 Isaac이 피한 것으로 간주)
+ALIGN_TOL = 32  # 축 정렬 허용 범위
 
 
 class Charger:
@@ -39,17 +41,21 @@ class Charger:
         self.size_y = 25
 
         self._init_position()
-
         Charger._instances.append(self)
 
         self.frame = 0.0
         self.hp = 3
         self.state = STATE_WANDER
         self.dir = random.choice([(1, 0), (-1, 0), (0, 1), (0, -1)])
-        self.timer = 0
 
         self.normal_frames = 4.0
-        self.chase_frames = 1.0
+
+        # BT용 변수
+        self.wander_timer = 0
+        self.charge_dir = (0, 0)
+        self.tx, self.ty = 0, 0
+
+        self.build_behavior_tree()
 
     def _init_position(self):
         bounds = self._find_stage_bounds()
@@ -129,39 +135,89 @@ class Charger:
                     return False
         return True
 
-    def update(self):
-        delta = game_framework.frame_time
-        speed_factor = 2.0 if self.state == STATE_CHARGE else 1.0
-        self.frame = (self.frame + self.normal_frames * speed_factor * delta)
+    # --- Behavior Tree 노드 함수들 ---
 
-        if self.state == STATE_WANDER:
-            self._update_wander(delta)
-        elif self.state == STATE_CHARGE:
-            self._update_charge(delta)
-
-    def _update_wander(self, delta):
+    def is_aligned_with_isaac(self):
         target = common.isaac
+        if not target: return BehaviorTree.FAIL
+
+        dx = abs(self.x - target.x)
+        dy = abs(self.y - target.y)
+
+        # Y축 정렬 (수평 돌진)
+        if dy < ALIGN_TOL:
+            if self._can_see_target(target, 'x'):
+                self.charge_dir = (1, 0) if target.x > self.x else (-1, 0)
+                self.dir = self.charge_dir  # 방향 즉시 업데이트 (그리기용)
+                return BehaviorTree.SUCCESS
+
+        # X축 정렬 (수직 돌진)
+        elif dx < ALIGN_TOL:
+            if self._can_see_target(target, 'y'):
+                self.charge_dir = (0, 1) if target.y > self.y else (0, -1)
+                self.dir = self.charge_dir  # 방향 즉시 업데이트 (그리기용)
+                return BehaviorTree.SUCCESS
+
+        return BehaviorTree.FAIL
+
+    def do_charge(self):
+        self.state = STATE_CHARGE
+
+        delta = game_framework.frame_time
+
+        # 1. 이동 계산
+        next_x = self.x + self.charge_dir[0] * CHARGE_SPEED_PPS * delta
+        next_y = self.y + self.charge_dir[1] * CHARGE_SPEED_PPS * delta
+
+        # 2. 벽 충돌 검사 -> 충돌 시 FAIL 반환 (배회로 전환)
+        if not self._is_position_safe(next_x, next_y):
+            self.state = STATE_WANDER  # 상태 복귀
+            self.timer = 1.0  # 잠시 멈춤 효과
+            return BehaviorTree.FAIL
+
+        # 3. Isaac이 공격 경로(범위) 내에 있는지 확인 (회피 구현)
+        target = common.isaac
+        keep_charging = False
+
         if target:
             dx = abs(self.x - target.x)
             dy = abs(self.y - target.y)
 
-            # 플레이어 발견 시 돌진 상태로 전환
-            if dy < ALIGN_TOL:
-                if self._can_see_target(target, 'x'):
-                    self.state = STATE_CHARGE
-                    self.dir = (1, 0) if target.x > self.x else (-1, 0)
-                    return
+            # 수평 이동 중일 때
+            if self.charge_dir[0] != 0:
+                if dy < ALIGN_TOL:  # 여전히 Y축 정렬 상태여야 함
+                    if (self.charge_dir[0] > 0 and target.x > self.x) or \
+                            (self.charge_dir[0] < 0 and target.x < self.x):
+                        keep_charging = True
 
-            elif dx < ALIGN_TOL:
-                if self._can_see_target(target, 'y'):
-                    self.state = STATE_CHARGE
-                    self.dir = (0, 1) if target.y > self.y else (0, -1)
-                    return
+            # 수직 이동 중일 때
+            elif self.charge_dir[1] != 0:
+                if dx < ALIGN_TOL:  # 여전히 X축 정렬 상태여야 함
+                    if (self.charge_dir[1] > 0 and target.y > self.y) or \
+                            (self.charge_dir[1] < 0 and target.y < self.y):
+                        keep_charging = True
 
-        self.timer -= delta
-        if self.timer <= 0:
+        # 조건 불만족(Isaac이 피함) 시 돌진 중단 -> FAIL 반환
+        if not keep_charging:
+            self.state = STATE_WANDER
+            self.timer = 0.5
+            return BehaviorTree.FAIL
+
+        # 모든 조건 통과 시 이동 적용 및 RUNNING 반환
+        self.x, self.y = next_x, next_y
+        return BehaviorTree.RUNNING
+
+    def do_wander(self):
+
+        self.state = STATE_WANDER
+
+        delta = game_framework.frame_time
+
+        # 타이머 처리
+        self.wander_timer -= delta
+        if self.wander_timer <= 0:
             self._choose_random_direction()
-            self.timer = random.uniform(1.0, 3.0)
+            self.wander_timer = random.uniform(1.0, 3.0)
 
         next_x = self.x + self.dir[0] * WANDER_SPEED_PPS * delta
         next_y = self.y + self.dir[1] * WANDER_SPEED_PPS * delta
@@ -171,49 +227,7 @@ class Charger:
         else:
             self._choose_random_direction()
 
-    def _update_charge(self, delta):
-        # 1. 이동 계산
-        next_x = self.x + self.dir[0] * CHARGE_SPEED_PPS * delta
-        next_y = self.y + self.dir[1] * CHARGE_SPEED_PPS * delta
-
-        # 2. 벽 충돌 검사
-        if not self._is_position_safe(next_x, next_y):
-            self.state = STATE_WANDER
-            self.timer = 1.0
-            return
-
-        # 3.  Isaac이공격 경로(범위) 내에 있는지 확인
-        target = common.isaac
-        keep_charging = False
-
-        if target:
-            dx = abs(self.x - target.x)
-            dy = abs(self.y - target.y)
-
-            # 수평 이동 중일 때 (X축 돌진)
-            if self.dir[0] != 0:
-                # Isaac이 Y축 범위 내에 있고(피하지 않음) + 진행 방향 쪽에 있어야 함
-                if dy < ALIGN_TOL:
-                    # 오른쪽으로 가는데 target이 오른쪽에 있거나, 왼쪽으로 가는데 target이 왼쪽에 있어야 함
-                    if (self.dir[0] > 0 and target.x > self.x) or \
-                            (self.dir[0] < 0 and target.x < self.x):
-                        keep_charging = True
-
-            # 수직 이동 중일 때 (Y축 돌진)
-            elif self.dir[1] != 0:
-                if dx < ALIGN_TOL:
-                    if (self.dir[1] > 0 and target.y > self.y) or \
-                            (self.dir[1] < 0 and target.y < self.y):
-                        keep_charging = True
-
-        # 조건 불만족(회피했거나 지나침)시 돌진 중단
-        if not keep_charging:
-            self.state = STATE_WANDER
-            self.timer = 0.5  # 잠깐 대기 후 다시 배회
-            return
-
-        # 모든 조건 통과 시 이동 적용
-        self.x, self.y = next_x, next_y
+        return BehaviorTree.SUCCESS
 
     def _choose_random_direction(self):
         dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
@@ -222,8 +236,32 @@ class Charger:
             dx, dy = d
             if self._is_position_safe(self.x + dx * 10, self.y + dy * 10):
                 self.dir = d
+                self.wander_timer = random.uniform(1.0, 3.0)  # 방향 전환 후 타이머 리셋
                 return
         self.dir = (0, 0)
+
+    def build_behavior_tree(self):
+        # 1. 공격 시퀀스: 정렬됨? -> 돌진
+        c_aligned = Condition('Aligned?', self.is_aligned_with_isaac)
+        a_charge = Action('Charge', self.do_charge)
+        seq_attack = Sequence('Attack Sequence', c_aligned, a_charge)
+
+        # 2. 배회 액션
+        a_wander = Action('Wander', self.do_wander)
+
+        # 3. 루트: 공격 시도 -> 안되면 배회
+        root = Selector('Charger Logic', seq_attack, a_wander)
+
+        self.bt = BehaviorTree(root)
+
+    def update(self):
+        # BT 실행
+        self.bt.run()
+
+        # 애니메이션 프레임 업데이트
+        delta = game_framework.frame_time
+        speed_factor = 2.0 if self.state == STATE_CHARGE else 1.0
+        self.frame = (self.frame + self.normal_frames * speed_factor * delta)
 
     def draw(self):
         sx, sy = game_world.world_to_screen(self.x, self.y)
@@ -234,22 +272,23 @@ class Charger:
 
         dx, dy = self.dir
 
+
         if self.state == STATE_CHARGE:
-            charge_frame_idx = 0
+            charge_frame_idx = 0  # 돌진 이미지는 프레임 0번 고정
 
             if dx > 0:  # [돌진] 오른쪽 (Right)
-                Charger.image.clip_draw(charge_frame_idx * 32 +32, 0, 32, 32, sx, sy, 64, 64)
+                Charger.image.clip_draw(charge_frame_idx * 32 + 32, 0, 32, 32, sx, sy, 64, 64)
 
             elif dx < 0:  # [돌진] 왼쪽 (Left)
-                Charger.image.clip_composite_draw(charge_frame_idx * 32+32, 0, 32, 32, 0, 'h', sx, sy, 64, 64)
+                Charger.image.clip_composite_draw(charge_frame_idx * 32 + 32, 0, 32, 32, 0, 'h', sx, sy, 64, 64)
 
             elif dy > 0:  # [돌진] 위쪽 (Up)
-                Charger.image.clip_draw(charge_frame_idx * 32+64, 0, 32, 32, sx, sy, 64, 64)
+                Charger.image.clip_draw(charge_frame_idx * 32 + 64, 0, 32, 32, sx, sy, 64, 64)
 
             else:  # [돌진] 아래쪽 (Down)
                 Charger.image.clip_draw(charge_frame_idx * 32, 0, 32, 32, sx, sy, 64, 64)
 
-        else:
+        else:  # STATE_WANDER
             walk_frame_idx = int(self.frame) % 4
 
             if dx > 0:  # [걷기] 오른쪽 (Right)
