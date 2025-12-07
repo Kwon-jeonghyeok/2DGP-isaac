@@ -30,6 +30,7 @@ class Stage_3:
             'map_right': 1475,
             'map_bottom': 175,
             'map_top': 700,
+            'clamp_margin': 90,
             'notches': []
         }
 
@@ -58,21 +59,21 @@ class Stage_3:
 
         sx, sy = game_world.world_to_screen(center_x, center_y)
         if self.image:
-            self.image.draw(sx, sy, map_w, 800)
+            self.image.draw(sx, sy, 1375, 800)
 
         # 문 그리기
         if self.image2:
             door_world_x = 500
-            door_world_y = 120
+            door_world_y = 140
             dx, dy = game_world.world_to_screen(door_world_x, door_world_y)
             if self.is_cleared:
                 # 열린 문 (기존 코드)
                 self.image2.clip_composite_draw(0, 40, 50, 52, 0, 'v', dx, dy, 120, 120)
-                dx2, dy2 = game_world.world_to_screen(465, 120)
+                dx2, dy2 = game_world.world_to_screen(465, 140)
                 self.image2.clip_composite_draw(50, 40, 50, 52, 0, 'v', dx2, dy2, 130, 120)
             else:
                 self.image2.clip_composite_draw(0, 40, 50, 52, 0, 'v', dx, dy, 120, 120)
-                dx2, dy2 = game_world.world_to_screen(465, 100)
+                dx2, dy2 = game_world.world_to_screen(465, 120)
                 self.image2.clip_composite_draw(50, 0, 50, 52, 0, 'v', dx2, dy2, 130, 120)
     def ensure_obstacles(self):
         if not self.rocks:

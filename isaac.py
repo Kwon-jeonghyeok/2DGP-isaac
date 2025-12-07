@@ -226,9 +226,10 @@ class Isaac:
     def apply_map_bounds(self, bounds):
         left = bounds.get('map_left', -1e9)
         right = bounds.get('map_right', 1e9)
-        bottom = bounds.get('map_bottom', -1e9)
-        top = bounds.get('map_top', 1e9)
+        bottom = bounds.get('map_bottom', -1e9) +25
+        top = bounds.get('map_top', 1e9) + 25
 
+        margin = bounds.get('clamp_margin', 0)
         # 기본적으로 모든 가장자리를 막음(허용=False)
         allow_left = allow_right = allow_top = allow_bottom = False
 
@@ -265,10 +266,11 @@ class Isaac:
                     allow_right = True
 
         # 노치로 허용되지 않은 가장자리들은 위치를 클램프
-        if not allow_left and px < left:
-            self.x = left
-        if not allow_right and px > right:
-            self.x = right
+
+        if not allow_left and px < left + margin:
+            self.x = left + margin
+        if not allow_right and px > right - margin:
+            self.x = right - margin
         if not allow_bottom and py < bottom:
             self.y = bottom
         if not allow_top and py > top:
