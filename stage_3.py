@@ -22,17 +22,24 @@ class Stage_3:
         self.rocks = []
         self.poos = []
 
+        self.is_cleared = False
+
     def get_map_bounds(self):
-        return {
+        bounds = {
             'map_left': 100,
             'map_right': 1475,
             'map_bottom': 175,
             'map_top': 700,
-            'notches': [
-                {'x': 1475, 'y': 400, 'w': 50, 'h': 70},
-                {'x': 490, 'y': 175, 'w': 50, 'h': 50},
-            ]
+            'notches': []
         }
+
+        #클리어 시에만 노치 개방
+        if self.is_cleared:
+            bounds['notches'] = [
+                {'x': 1475, 'y': 400, 'w': 50, 'h': 70},  # 오른쪽 문
+                {'x': 490, 'y': 175, 'w': 50, 'h': 50},  # 아래쪽 문
+            ]
+        return bounds
 
     def update(self):
         pass
@@ -58,11 +65,15 @@ class Stage_3:
             door_world_x = 500
             door_world_y = 120
             dx, dy = game_world.world_to_screen(door_world_x, door_world_y)
-            self.image2.clip_composite_draw(0, 40, 50, 52, 0, 'v', dx, dy, 120, 120)
-
-            dx2, dy2 = game_world.world_to_screen(465, 120)
-            self.image2.clip_composite_draw(50, 40, 50, 52, 0, 'v', dx2, dy2, 130, 120)
-
+            if self.is_cleared:
+                # 열린 문 (기존 코드)
+                self.image2.clip_composite_draw(0, 40, 50, 52, 0, 'v', dx, dy, 120, 120)
+                dx2, dy2 = game_world.world_to_screen(465, 120)
+                self.image2.clip_composite_draw(50, 40, 50, 52, 0, 'v', dx2, dy2, 130, 120)
+            else:
+                self.image2.clip_composite_draw(0, 40, 50, 52, 0, 'v', dx, dy, 120, 120)
+                dx2, dy2 = game_world.world_to_screen(465, 100)
+                self.image2.clip_composite_draw(50, 0, 50, 52, 0, 'v', dx2, dy2, 130, 120)
     def ensure_obstacles(self):
         if not self.rocks:
             self._create_rocks_and_poos(initial=(len(self.poos) == 0))

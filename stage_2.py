@@ -13,6 +13,9 @@ class Stage_2:
         self.rocks = []
         self.poos = []
 
+        self.is_cleared = False
+
+
         self.manual_rock_positions = [
             (300, 380), (300, 460), (300, 540),  # 왼쪽 벽
             (700, 380), (700, 460), (700, 540),  # 오른쪽 벽
@@ -26,17 +29,23 @@ class Stage_2:
         # ==========================================
 
     def get_map_bounds(self):
-        return {
+        # 기본 맵 경계
+        bounds = {
             'map_left': 100,
             'map_right': 875,
             'map_bottom': 175,
             'map_top': 700,
-            'notches': [
-                {'x': 490, 'y': 700, 'w': 50, 'h': 50},
-                {'x': 490, 'y': 175, 'w': 50, 'h': 50},
-            ]
+            'notches': []  # 기본은 닫힘
         }
 
+        # 클리어 되었을 때만 노치(문 통로)를 개방
+        if self.is_cleared:
+            bounds['notches'] = [
+                {'x': 490, 'y': 700, 'w': 50, 'h': 50},  # 위쪽 문
+                {'x': 490, 'y': 175, 'w': 50, 'h': 50},  # 아래쪽 문
+            ]
+
+        return bounds
     def update(self):
         pass
 
@@ -46,11 +55,19 @@ class Stage_2:
         self.image.composite_draw(0, 'v', 250, 200, 500, 400)
         self.image.composite_draw(0, 'hv', 750, 200, 500, 400)
 
-        # 문 그리기
-        self.image2.clip_composite_draw(0, 40, 50, 52, 0, 'v', 500, 120, 120, 120)
-        self.image2.clip_composite_draw(50, 40, 50, 52, 0, 'v', 465, 120, 130, 120)
-        self.image2.clip_draw(0, 40, 50, 52, 500, 680, 120, 120)
-        self.image2.clip_draw(50, 40, 50, 52, 465, 680, 130, 120)
+
+        if self.is_cleared:
+            # 열린 문
+            self.image2.clip_composite_draw(0, 40, 50, 52, 0, 'v', 500, 120, 120, 120)
+            self.image2.clip_composite_draw(50, 40, 50, 52, 0, 'v', 465, 120, 130, 120)
+            self.image2.clip_draw(0, 40, 50, 52, 500, 680, 120, 120)
+            self.image2.clip_draw(50, 40, 50, 52, 465, 680, 130, 120)
+
+        else:
+            self.image2.clip_composite_draw(0, 40, 50, 52, 0, 'v', 500, 120, 120, 120)
+            self.image2.clip_composite_draw(50, 0, 50, 52, 0, 'v', 465, 100, 130, 120)
+            self.image2.clip_draw(0, 40, 50, 52, 500, 680, 120, 120)
+            self.image2.clip_draw(50, 0, 50, 52, 465, 700, 130, 120)
 
     def ensure_obstacles(self):
         # 1. 객체 생성 (아직 리스트가 비어있다면)
