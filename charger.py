@@ -3,6 +3,7 @@ import game_world
 import random
 import game_framework
 import common
+from coin import Coin
 from behavior_tree import BehaviorTree, Action, Sequence, Condition, Selector
 
 
@@ -307,6 +308,10 @@ class Charger:
         if group == 'charger:tear':
             self.hp -= 1
             if self.hp <= 0:
+                if random.random() < 0.5:  # 50% 확률
+                    coin = Coin(self.x, self.y)
+                    game_world.add_object(coin, 1)
+                    game_world.add_collision_pair('isaac:coin', None, coin)
                 self.destroy()
 
     def destroy(self):

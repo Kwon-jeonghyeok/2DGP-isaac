@@ -1,6 +1,8 @@
 # python
 from pico2d import load_image, draw_rectangle
 import game_world
+import random
+from coin import Coin
 
 class Poo:
     image = None
@@ -70,6 +72,10 @@ class Poo:
                 self.collidable = False
                 try:
                     game_world.remove_collision_object(self)
+                    if random.random() < 0.3:
+                        coin = Coin(self.x, self.y)
+                        game_world.add_object(coin, 1)  # 레이어 1에 추가
+                        game_world.add_collision_pair('isaac:coin', None, coin)
                 except Exception:
                     pass
         return

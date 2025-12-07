@@ -1,4 +1,4 @@
-from pico2d import load_image, get_time , draw_rectangle
+from pico2d import load_image, get_time , draw_rectangle, load_font
 from sdl2 import SDL_KEYDOWN, SDLK_s, SDLK_d, SDL_KEYUP, SDLK_a, SDLK_w, SDLK_SPACE
 from state_machine import StateMachine
 import game_world
@@ -155,6 +155,18 @@ class Isaac:
         self.y_dir = 0
         self.max_hp = 10
         self.hp = self.max_hp
+        #코인 개수 및 폰트 로드
+        self.coin_count = 0
+        try:
+            self.font = load_font('resource/ariblk.ttf', 24)
+        except Exception:
+            self.font = None
+
+        # 코인 아이콘 이미지 (UI용)
+        try:
+            self.coin_ui_image = load_image('resource/objects/coin.png')
+        except:
+            self.coin_ui_image = None
         self.hearts_image = load_image('resource/UI_Hearts.png')
 
         self.hurt_image = load_image('resource/hurt.png')
@@ -283,6 +295,7 @@ class Isaac:
 
     def draw(self):
         self.draw_hp()
+        self.draw_coin_ui()
         if self.hurt_timer > 0.0:
             if self.hurt_visible:
                 try:
@@ -301,6 +314,18 @@ class Isaac:
         ls, bs = game_world.world_to_screen(l, b)
         rs, ts = game_world.world_to_screen(r, t)
         draw_rectangle(ls, bs, rs, ts)
+
+    def draw_coin_ui(self):
+        # 화면 좌측 상단
+        ui_x, ui_y = 50, 750
+
+        # 코인 아이콘 그리기
+        if self.coin_ui_image:
+            self.coin_ui_image.draw(ui_x, ui_y, 30, 30)
+
+        # 숫자 그리기
+        if self.font:
+            self.font.draw(ui_x + 25, ui_y, f'x {self.coin_count}', (255, 255, 255))
 
     def fire_tear(self):
         if self.is_invulnerable:
@@ -399,6 +424,9 @@ class Isaac:
                 self.take_damage(1)
             except Exception:
                 pass
+            return
+        if group == 'isaac:coin':
+            self.coin_count += 1
             return
 
         # 장애물(Rock, Poo) 충돌: 최소 보정 + 너무 작은 보정은 무시해서 흔들림 제거

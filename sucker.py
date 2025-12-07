@@ -5,7 +5,7 @@ import math
 import game_framework
 from behavior_tree import BehaviorTree, Action, Sequence, Condition, Selector
 import common
-
+from coin import Coin
 PIXEL_PER_METER = (10.0 / 0.3)  # 10 pixel 30 cm
 RUN_SPEED_KMPH = 10.0  # Km / Hour
 RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
@@ -170,6 +170,10 @@ class Sucker:
             except Exception:
                 pass
             if self.hp <= 0:
+                if random.random() < 0.5:  # 50% 확률
+                    coin = Coin(self.x, self.y)
+                    game_world.add_object(coin, 1)
+                    game_world.add_collision_pair('isaac:coin', None, coin)
                 self.destroy()
 
     def set_target_location(self, x=None, y=None):

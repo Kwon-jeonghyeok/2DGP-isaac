@@ -2,7 +2,7 @@ import game_framework
 import game_world
 import random
 from pico2d import *
-
+from coin import Coin
 TIME_PER_ACTION = 0.5
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 10.0
@@ -147,6 +147,10 @@ class Host:
 
         # 사망 처리
         if self.hp <= 0:
+            if random.random() < 0.5:  # 50% 확률
+                coin = Coin(self.x, self.y)
+                game_world.add_object(coin, 1)
+                game_world.add_collision_pair('isaac:coin', None, coin)
             self.destroy()
             return
 
