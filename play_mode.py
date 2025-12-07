@@ -18,6 +18,7 @@ host = None
 sucker = None
 chargers = None
 stage_index = 1
+stage_2_instance = None
 stage_3_instance = None
 def handle_events():
     event_list = get_events()
@@ -31,7 +32,7 @@ def handle_events():
                 common.isaac.handle_event(event)
 
 def init():
-    global isaac, stage, stage_index, host, sucker, stage_3_instance, chargers
+    global isaac, stage, stage_index, host, sucker, stage_3_instance, chargers, stage_2_instance
 
     stage = Stage_1()
     game_world.add_object(stage, 0)
@@ -42,6 +43,7 @@ def init():
     game_world.add_object(common.isaac, 2)
     stage_index = 1
     stage_3_instance = Stage_3()
+    stage_2_instance = Stage_2()
 
     chargers = [Charger() for _ in range(2)]
 
@@ -64,7 +66,7 @@ def _remove_projectiles():
                     pass
 
 def update():
-    global stage, stage_index, isaac, host, sucker, stage_3_instance, chargers
+    global stage, stage_index, isaac, host, sucker, stage_3_instance, chargers , stage_2_instance
 
     if common.isaac is None or stage is None:
         return
@@ -108,21 +110,26 @@ def update():
             game_world.remove_object(stage)
         except ValueError:
             pass
-        stage = Stage_2()
+        stage = stage_2_instance
         game_world.add_object(stage, 0)
+        if hasattr(stage, 'ensure_obstacles'):
+            stage.ensure_obstacles()
         stage_index = 2
 
         for h in host:
+            # 돌, 똥이 이미 깔려 있으므로 이를 인식해서 안전한 곳으로 감
+            h.set_safe_position()
             game_world.add_object(h, 1)
             game_world.add_collision_pair('isaac:host', None, h)
             game_world.add_collision_pair('host:tear', h, None)
-
         common.isaac.y = 175
 
     # Stage_2 -> Stage_1 (돌아갈 때)
     if common.isaac.y < 125 and stage_index == 2:
         _remove_projectiles()
         try:
+            if hasattr(stage, 'clear_obstacles'):
+                stage.clear_obstacles()
             game_world.remove_object(stage)
             for h in host:
                 try:
@@ -140,6 +147,8 @@ def update():
     if common.isaac.y > 750 and stage_index == 2:
         _remove_projectiles()
         try:
+            if hasattr(stage, 'clear_obstacles'):
+                stage.clear_obstacles()
             game_world.remove_object(stage)
             for h in host:
                 try:
@@ -215,11 +224,15 @@ def update():
             pass
 
 
-        stage = Stage_2()
+        stage = stage_2_instance
         game_world.add_object(stage, 0)
+
+        if hasattr(stage, 'ensure_obstacles'):
+            stage.ensure_obstacles()
         stage_index = 2
         common.isaac.y = 700
         for h in host:
+            h.set_safe_position()
             game_world.add_object(h, 1)
             game_world.add_collision_pair('isaac:host', None, h)
             game_world.add_collision_pair('host:tear', h, None)
