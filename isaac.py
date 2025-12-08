@@ -429,6 +429,11 @@ class Isaac:
             self.coin_count += 1
             return
 
+        if group == 'isaac:hp_potion':
+            # 체력 회복 (최대 체력까지만)
+            if self.hp < self.max_hp:
+                self.heal(2)  # 하트 1칸(2 HP) 회복
+            return  # 물약은 획득 후 사라짐 (HPPotion 쪽에서 remove_object 호출됨)
         # 장애물(Rock, Poo) 충돌: 최소 보정 + 너무 작은 보정은 무시해서 흔들림 제거
         if group in ('isaac:rock', 'isaac:poo'):
             try:

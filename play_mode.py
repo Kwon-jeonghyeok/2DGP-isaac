@@ -9,6 +9,7 @@ from stage_2 import Stage_2
 from host import Host
 from sucker import Sucker
 from stage_3 import Stage_3
+from stage_4 import Stage_4
 from charger import Charger
 import common
 
@@ -20,6 +21,7 @@ chargers = None
 stage_index = 1
 stage_2_instance = None
 stage_3_instance = None
+stage_4_instance = None
 def handle_events():
     event_list = get_events()
     for event in event_list:
@@ -32,7 +34,7 @@ def handle_events():
                 common.isaac.handle_event(event)
 
 def init():
-    global isaac, stage, stage_index, host, sucker, stage_3_instance, chargers, stage_2_instance
+    global isaac, stage, stage_index, host, sucker, stage_3_instance, chargers, stage_2_instance, stage_4_instance
 
     stage = Stage_1()
     common.stage = stage
@@ -45,6 +47,7 @@ def init():
     stage_index = 1
     stage_3_instance = Stage_3()
     stage_2_instance = Stage_2()
+    stage_4_instance = Stage_4()
 
     chargers = [Charger() for _ in range(2)]
 
@@ -67,7 +70,7 @@ def _remove_projectiles():
                     pass
 
 def update():
-    global stage, stage_index, isaac, host, sucker, stage_3_instance, chargers , stage_2_instance
+    global stage, stage_index, isaac, host, sucker, stage_3_instance, chargers , stage_2_instance, stage_4_instance
 
     if common.isaac is None or stage is None:
         return
@@ -262,6 +265,70 @@ def update():
             game_world.add_collision_pair('isaac:host', None, h)
             game_world.add_collision_pair('host:tear', h, None)
 
+    if common.isaac.x > 1450 and stage_index == 3 and stage.is_cleared:
+        _remove_projectiles()
+        try:
+            if hasattr(stage, 'clear_obstacles'): stage.clear_obstacles()
+            game_world.remove_object(stage)
+            # Stage 3 몬스터 제거 로직 (sucker, charger)
+            for s in sucker:
+                try:
+                    game_world.remove_object(s)
+                except:
+                    pass
+            for c in chargers:
+                try:
+                    game_world.remove_object(c)
+                except:
+                    pass
+        except ValueError:
+            pass
+
+        stage = stage_4_instance
+        common.stage = stage
+
+        game_world.add_object(stage, 0)
+        if hasattr(stage, 'ensure_obstacles'):
+            stage.ensure_obstacles()
+
+        stage_index = 4
+        # Stage 4(상점)의 왼쪽 문 앞(150, 400)으로 아이작 이동
+        common.isaac.x = 150
+        common.isaac.y = 400
+
+        #Stage_4 -> Stage_3 (왼쪽 문으로 복귀 시)
+    if common.isaac.x < 125 and stage_index == 4:
+        _remove_projectiles()
+        try:
+            if hasattr(stage, 'clear_obstacles'): stage.clear_obstacles()
+            game_world.remove_object(stage)
+            # Stage 4에는 몬스터가 없으므로 몬스터 제거 로직 불필요 (하지만 머신은 clear_obstacles에서 제거됨)
+        except ValueError:
+            pass
+
+        stage = stage_3_instance
+        common.stage = stage
+
+        game_world.add_object(stage, 0)
+        if hasattr(stage, 'ensure_obstacles'):
+            stage.ensure_obstacles()
+
+        stage_index = 3
+        # Stage 3의 오른쪽 문 앞(1400, 440)으로 아이작 이동
+        common.isaac.x = 1400
+        common.isaac.y = 440
+
+        # Stage 3 몬스터 복구 (죽은 애 빼고)
+        for s in list(sucker):
+            if s.hp > 0:
+                game_world.add_object(s, 1)
+                game_world.add_collision_pair('isaac:sucker', None, s)
+                game_world.add_collision_pair('sucker:tear', s, None)
+        for c in list(chargers):
+            if c.hp > 0:
+                game_world.add_object(c, 1)
+                if common.isaac: game_world.add_collision_pair('isaac:charger', common.isaac, c)
+                game_world.add_collision_pair('charger:tear', c, None)
     if common.isaac.hp <= 0:
         _remove_projectiles()
         game_world.clear()
