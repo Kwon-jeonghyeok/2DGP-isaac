@@ -76,24 +76,25 @@ def update():
         return
 
     game_world.update()
-    if stage_index == 2:
-        # Host가 모두 죽으면 클리어
-        alive_host = [h for h in host if h.hp > 0]
-        if len(alive_host) == 0:
-            stage.is_cleared = True
-        else:
-            stage.is_cleared = False
-    elif stage_index == 3:
-        # Sucker와 Charger가 모두 죽으면 클리어
-        alive_sucker = [s for s in sucker if s.hp > 0]
-        alive_charger = [c for c in chargers if c.hp > 0]
-        if len(alive_sucker) == 0 and len(alive_charger) == 0:
-            stage.is_cleared = True
-        else:
-            stage.is_cleared = False
-    elif stage_index == 1:
-        # 스테이지 1은 몬스터가 없으므로 항상 클리어
-        stage.is_cleared = True
+    # 스테이지 클리어 조건 검사 테스트용으로 주석처리
+    # if stage_index == 2:
+    #     # Host가 모두 죽으면 클리어
+    #     alive_host = [h for h in host if h.hp > 0]
+    #     if len(alive_host) == 0:
+    #         stage.is_cleared = True
+    #     else:
+    #         stage.is_cleared = False
+    # elif stage_index == 3:
+    #     # Sucker와 Charger가 모두 죽으면 클리어
+    #     alive_sucker = [s for s in sucker if s.hp > 0]
+    #     alive_charger = [c for c in chargers if c.hp > 0]
+    #     if len(alive_sucker) == 0 and len(alive_charger) == 0:
+    #         stage.is_cleared = True
+    #     else:
+    #         stage.is_cleared = False
+    # elif stage_index == 1:
+    #     # 스테이지 1은 몬스터가 없으므로 항상 클리어
+    #     stage.is_cleared = True
 
     bounds = stage.get_map_bounds()
     common.isaac.apply_map_bounds(bounds)

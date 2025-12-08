@@ -156,7 +156,9 @@ class Isaac:
         self.max_hp = 10
         self.hp = self.max_hp
         #코인 개수 및 폰트 로드
-        self.coin_count = 0
+
+        #self.coin_count = 0
+        self.coin_count =30 #초기 코인 개수 테스트용
         try:
             self.font = load_font('resource/upheaval-tt-brk.upheaval-tt-brk.ttf', 24)
         except Exception:

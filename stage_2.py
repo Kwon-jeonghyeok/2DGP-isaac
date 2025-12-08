@@ -14,7 +14,9 @@ class Stage_2:
         self.poos = []
         self.coins = []
 
-        self.is_cleared = False
+        #self.is_cleared = False
+
+        self.is_cleared = True         #디버깅용으로 true로 설정
 
 
         self.manual_rock_positions = [

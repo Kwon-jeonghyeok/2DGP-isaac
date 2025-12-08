@@ -44,7 +44,7 @@ class Stage_4:
     def ensure_obstacles(self):
         # 머신 생성 (중앙)
         if self.machine is None:
-            self.machine = Machine(500, 400)
+            self.machine = Machine(500, 350)
 
         if self.machine not in sum(game_world.world, []):
             game_world.add_object(self.machine, 1)

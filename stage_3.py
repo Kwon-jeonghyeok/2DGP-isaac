@@ -23,7 +23,8 @@ class Stage_3:
         self.poos = []
         self.coins = []
 
-        self.is_cleared = False
+        #self.is_cleared = False
+        self.is_cleared = True  # 디버깅용으로 true로 설정
 
     def get_map_bounds(self):
         bounds = {
