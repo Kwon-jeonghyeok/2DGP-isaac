@@ -240,7 +240,8 @@ class Host:
         # 가만히(idle)일 때 무적, 공격 중일 때만 피해 허용
         if group == 'host:tear' or group == 'host_bullet:isaac':
             if self.is_vulnerable:
-                self.hp -= 1
+                damage = getattr(other, 'damage', 1)
+                self.hp -= damage
 
 
 

@@ -306,7 +306,8 @@ class Charger:
 
     def handle_collision(self, group, other):
         if group == 'charger:tear':
-            self.hp -= 1
+            damage = getattr(other, 'damage', 1)  # 안전하게 가져오기
+            self.hp -= damage
             if self.hp <= 0:
                 if random.random() < 0.5:  # 50% 확률
                     coin = Coin(self.x, self.y)

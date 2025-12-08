@@ -166,7 +166,8 @@ class Sucker:
     def handle_collision(self, group, other):
         if group == 'sucker:tear':
             try:
-                self.hp -= 1
+                damage = getattr(other, 'damage', 1)  # 안전하게 가져오기
+                self.hp -= damage
             except Exception:
                 pass
             if self.hp <= 0:

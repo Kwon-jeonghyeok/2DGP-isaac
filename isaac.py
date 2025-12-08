@@ -155,6 +155,7 @@ class Isaac:
         self.y_dir = 0
         self.max_hp = 10
         self.hp = self.max_hp
+        self.damage = 1
         #코인 개수 및 폰트 로드
 
         #self.coin_count = 0
@@ -333,7 +334,7 @@ class Isaac:
         if self.is_invulnerable:
             return
         if self.tear_cooldown <= 0.0:
-            tear = Tear(self.x, self.y, self.face_dir)
+            tear = Tear(self.x, self.y, self.face_dir, damage= self.damage)
             game_world.add_object(tear, 1)
             game_world.add_collision_pair('host:tear', None, tear)
             game_world.add_collision_pair('sucker:tear', None, tear)
@@ -421,6 +422,14 @@ class Isaac:
 
     def handle_collision(self, group, other):
         # 기존 피해 처리: self.take_damage 그대로 유지
+        if group == 'isaac:damage_item':
+            if self.coin_count >= other.price:
+                self.coin_count -= other.price
+                self.damage += 1  # 공격력 1 증가
+                print(f"Damage Up! Current Damage: {self.damage}")
+                return  # 아이템 삭제는 DamageItem 쪽에서 처리됨 (혹은 여기서 remove_object 해도 됨)
+            else:
+                pass
         if group in ('isaac:host', 'host_bullet:isaac', 'isaac:sucker', 'isaac:charger'):
             try:
                 self.take_damage(1)

@@ -2,6 +2,7 @@ from pico2d import load_image
 import game_world
 import common
 from machine import Machine
+from damage_item import DamageItem
 from coin import Coin
 
 
@@ -11,6 +12,7 @@ class Stage_4:
         self.image2 = load_image('resource/objects/Door_1.png')
 
         self.machine = None
+        self.damage_item = None
         self.coins = []  # 스테이지에 떨어진 코인 관리용
         self.is_cleared = True  # 상점은 적이 없으므로 항상 클리어 상태
 
@@ -42,6 +44,14 @@ class Stage_4:
         self.image2.clip_composite_draw(0, 40, 50, 52, 3.14159 / 2, '', dx, dy, 120, 120)
 
     def ensure_obstacles(self):
+
+        if self.damage_item is None:
+            self.damage_item = DamageItem(600, 500)
+        if self.damage_item not in sum(game_world.world, []):
+            # 만약 이미 팔린 상태라면(hp가 없거나 플래그 체크) 추가 안 함
+            # DamageItem은 hp 속성이 없으므로, 객체가 살아있는지로 판단
+            game_world.add_object(self.damage_item, 1)
+            game_world.add_collision_pair('isaac:damage_item', common.isaac, self.damage_item)
         # 머신 생성 (중앙)
         if self.machine is None:
             self.machine = Machine(500, 350)
@@ -62,3 +72,5 @@ class Stage_4:
 
         for c in self.coins:
             game_world.remove_object(c)
+        if self.damage_item:
+            game_world.remove_object(self.damage_item)
