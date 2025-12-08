@@ -49,7 +49,7 @@ class Host:
         self.fire_delay = 0.7
         self._fire_delay_timer = 0.0
         self._pending_shot = False
-        self.attack_frame_durations = [1.0, 2.0, 1.0]
+        self.attack_frame_durations = [0.5, 2.5, 1.0]
 
     def set_safe_position(self):
         """현재 월드 상태를 확인하여 장애물과 겹치지 않는 랜덤 위치로 이동"""
@@ -226,14 +226,15 @@ class Host:
             if self.state == 'attack':
                 fx = int(self.attack_frame_index) * 32
                 Host.image.clip_draw(fx, 0, 32, 60, sx, sy, 70, 150)
+                l, b, r, t = self.get_bb()
+                ls, bs = game_world.world_to_screen(l, b)
+                rs, ts = game_world.world_to_screen(r, t)
+                draw_rectangle(ls, bs, rs, ts)
+
             else:
                 Host.image.clip_draw(0, 0, 32, 60, sx, sy, 70, 150)
         else:
             draw_rectangle(sx - 35, sy - 75, sx + 35, sy)
-        l, b, r, t = self.get_bb()
-        ls, bs = game_world.world_to_screen(l, b)
-        rs, ts = game_world.world_to_screen(r, t)
-        draw_rectangle(ls, bs, rs, ts)
 
     def handle_collision(self, group, other):
         # 가만히(idle)일 때 무적, 공격 중일 때만 피해 허용
