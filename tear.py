@@ -1,7 +1,7 @@
 from pico2d import *
 import game_world
 import game_framework
-
+import common
 PIXEL_PER_METER = (1.0 / 0.015)
 
 TIME_PER_ACTION = 1.0
@@ -21,8 +21,12 @@ class Tear:
         self.max_range = max_range
         self.traveled = 0.0
         self.damage = damage
-        self.frame_y = 215
-        self.frame_x = 280
+        if self.damage >= 2:
+            self.frame_y = 470
+            self.frame_x = 600
+        else:
+            self.frame_y = 215
+            self.frame_x = 280
 
         # 이동/폭발 상태 관리
         self.moving = True
@@ -57,12 +61,7 @@ class Tear:
         rs, ts = game_world.world_to_screen(ra, ta)
         draw_rectangle(ls, bs, rs, ts)
     def update(self):
-        if self.damage == 2:
-            self.frame_y = 470
-            self.frame_x = 600
-        else:
-            self.frame_y = 215
-            self.frame_x = 280
+
         # 이동 중일 때
         if self.moving:
 
@@ -88,41 +87,29 @@ class Tear:
                 self.moving = False
                 self.explosion_frame = 0.0
                 return
+            margin = 0
 
-            stage_obj = None
-            bounds = None
-            for layer in game_world.world:
-                for o in layer:
-                    if hasattr(o, 'get_map_bounds'):
-                        try:
-                            bounds = o.get_map_bounds()
-                            stage_obj = o
-                        except Exception:
-                            bounds = None
-                            stage_obj = None
-                        break
-                if bounds:
-                    break
+            # 2. 스테이지 3일 때만 다른 마진 적용
+            # common.stage가 존재하고, 그 클래스 이름이 'Stage_3'인지 확인
+            if common.stage and common.stage.__class__.__name__ == 'Stage_3':
+                margin = 75  # 예: Stage 3는 벽에 더 가까이 붙어야 터지게 설정 (원하는 값으로 수정!)
 
-            margin = 75
+            # 3. 현재 스테이지의 경계 가져오기 (common.stage 사용)
+            map_left, map_right, map_bottom, map_top = 0, 1000, 0, 800  # 안전용 기본값
 
-            # Stage_3일 때만 맵 기반 경계 검사 적용
-            if stage_obj and stage_obj.__class__.__name__ == 'Stage_3' and bounds:
-                left = bounds.get('map_left', -1e9)
-                right = bounds.get('map_right', 1e9)
-                bottom = bounds.get('map_bottom', -1e9)
-                top = bounds.get('map_top', 1e9)
+            if common.stage and hasattr(common.stage, 'get_map_bounds'):
+                bounds = common.stage.get_map_bounds()
+                map_left = bounds.get('map_left', map_left)
+                map_right = bounds.get('map_right', map_right)
+                map_bottom = bounds.get('map_bottom', map_bottom)
+                map_top = bounds.get('map_top', map_top)
 
-                if self.x < left + margin or self.x > right - margin or self.y < bottom - margin or self.y > top + margin:
-                    self.moving = False
-                    self.explosion_frame = 0.0
-                    return
-            else:
-                # 그 외 스테이지는 기존 화면 경계 사용
-                if self.x < 75 or self.x > 1000 - 75 or self.y < 75 or self.y > 800 - 75:
-                    self.moving = False
-                    self.explosion_frame = 0.0
-                    return
+            # 4. 결정된 마진(margin)과 경계(bounds)로 충돌 검사
+            if self.x < map_left + margin or self.x > map_right - margin  or \
+                    self.y < map_bottom or self.y > map_top + margin :
+                self.moving = False
+                self.explosion_frame = 0.0
+                return
         else:
             # 폭발 애니메이션 속도(프레임/초 기반)
             self.explosion_frame += FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time

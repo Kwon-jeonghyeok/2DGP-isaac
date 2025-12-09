@@ -100,13 +100,8 @@ class Sucker:
             pass
 
     def _find_stage_bounds(self):
-        for layer in game_world.world:
-            for o in layer:
-                if hasattr(o, 'get_map_bounds'):
-                    try:
-                        return o.get_map_bounds()
-                    except Exception:
-                        continue
+        if common.stage and hasattr(common.stage, 'get_map_bounds'):
+            return common.stage.get_map_bounds()
         return None
 
     def _is_position_free(self, x, y):

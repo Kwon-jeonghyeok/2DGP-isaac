@@ -4,6 +4,7 @@ from state_machine import StateMachine
 import game_world
 import game_framework
 from tear import Tear
+import common
 
 
 def right_down(e):
@@ -422,14 +423,7 @@ class Isaac:
 
     def handle_collision(self, group, other):
         # 기존 피해 처리: self.take_damage 그대로 유지
-        if group == 'isaac:damage_item':
-            if self.coin_count >= other.price:
-                self.coin_count -= other.price
-                self.damage += 1  # 공격력 1 증가
-                print(f"Damage Up! Current Damage: {self.damage}")
-                return  # 아이템 삭제는 DamageItem 쪽에서 처리됨 (혹은 여기서 remove_object 해도 됨)
-            else:
-                pass
+
         if group in ('isaac:host', 'host_bullet:isaac', 'isaac:sucker', 'isaac:charger'):
             try:
                 self.take_damage(1)
@@ -446,6 +440,19 @@ class Isaac:
                 self.heal(2)  # 하트 1칸(2 HP) 회복
             return  # 물약은 획득 후 사라짐 (HPPotion 쪽에서 remove_object 호출됨)
         # 장애물(Rock, Poo) 충돌: 최소 보정 + 너무 작은 보정은 무시해서 흔들림 제거
+        if group == 'isaac:damage_item':
+            # other는 DamageItem 객체
+            if self.coin_count >= other.price:
+                self.coin_count -= other.price
+                self.damage += 1  # 공격력 증가
+
+                # [핵심 추가] 현재 스테이지에 '팔렸음'을 기록
+                if common.stage and hasattr(common.stage, 'item_sold'):
+                    common.stage.item_sold = True
+
+                # 아이템 제거
+                game_world.remove_object(other)
+            return
         if group in ('isaac:rock', 'isaac:poo'):
             try:
                 if other is None:
@@ -510,21 +517,15 @@ class Isaac:
 
                 # 맵 경계가 있다면 다시 한 번 클램프
                 try:
-                    bounds = None
-                    for layer in game_world.world:
-                        for o in layer:
-                            if hasattr(o, 'get_map_bounds'):
-                                try:
-                                    bounds = o.get_map_bounds()
-                                except Exception:
-                                    bounds = None
-                                break
-                        if bounds:
-                            break
-                    if bounds:
+                    if common.stage and hasattr(common.stage, 'get_map_bounds'):
+                        bounds = common.stage.get_map_bounds()
                         self.apply_map_bounds(bounds)
                 except Exception:
                     pass
+
+                except Exception:
+                    pass
+                return
 
             except Exception:
                 pass

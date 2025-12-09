@@ -318,8 +318,10 @@ def update():
 
         stage_index = 3
         # Stage 3의 오른쪽 문 앞(1400, 440)으로 아이작 이동
-        common.isaac.x = 1400
-        common.isaac.y = 440
+        common.isaac.x = 1350
+        common.isaac.y = 400
+        common.isaac.prev_x = 1350
+        common.isaac.prev_y = 400
 
         # Stage 3 몬스터 복구 (죽은 애 빼고)
         for s in list(sucker):

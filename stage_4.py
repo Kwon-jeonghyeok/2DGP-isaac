@@ -15,6 +15,7 @@ class Stage_4:
         self.damage_item = None
         self.coins = []  # 스테이지에 떨어진 코인 관리용
         self.is_cleared = True  # 상점은 적이 없으므로 항상 클리어 상태
+        self.item_sold = False
 
     def get_map_bounds(self):
         # Stage 1, 2와 동일한 기본 방 구조
@@ -45,13 +46,13 @@ class Stage_4:
 
     def ensure_obstacles(self):
 
-        if self.damage_item is None:
-            self.damage_item = DamageItem(600, 500)
-        if self.damage_item not in sum(game_world.world, []):
-            # 만약 이미 팔린 상태라면(hp가 없거나 플래그 체크) 추가 안 함
-            # DamageItem은 hp 속성이 없으므로, 객체가 살아있는지로 판단
-            game_world.add_object(self.damage_item, 1)
-            game_world.add_collision_pair('isaac:damage_item', common.isaac, self.damage_item)
+        if not self.item_sold:
+            if self.damage_item is None:
+                self.damage_item = DamageItem(600, 500)
+
+            if self.damage_item not in sum(game_world.world, []):
+                game_world.add_object(self.damage_item, 1)
+                game_world.add_collision_pair('isaac:damage_item', common.isaac, self.damage_item)
         # 머신 생성 (중앙)
         if self.machine is None:
             self.machine = Machine(500, 350)
