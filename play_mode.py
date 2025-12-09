@@ -57,6 +57,7 @@ def init():
     game_world.add_collision_pair('isaac:coin', common.isaac, None)
     game_world.add_collision_pair('isaac:damage_item', common.isaac, None)
     game_world.add_collision_pair('isaac:hp_potion', common.isaac, None)
+    game_world.add_collision_pair('isaac:maggie_pet', common.isaac, None)
 
 
 def _remove_projectiles():

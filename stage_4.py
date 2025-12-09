@@ -3,6 +3,7 @@ import game_world
 import common
 from machine import Machine
 from damage_item import DamageItem
+from maggie_pet import MaggiePet
 from coin import Coin
 
 
@@ -10,7 +11,7 @@ class Stage_4:
     def __init__(self):
         self.image = load_image('resource/rooms/Rooms_Basement-1.png')
         self.image2 = load_image('resource/objects/Door_1.png')
-
+        self.maggie = None
         self.machine = None
         self.damage_item = None
         self.coins = []  # 스테이지에 떨어진 코인 관리용
@@ -46,9 +47,19 @@ class Stage_4:
 
     def ensure_obstacles(self):
 
+        # 매기 생성 (오른쪽)
+        already_has_pet = (common.isaac and getattr(common.isaac, 'pet', None) is not None)
+
+        if not already_has_pet:
+            if self.maggie is None:
+                self.maggie = MaggiePet(300, 600)  # 위치 설정
+
+            if self.maggie not in sum(game_world.world, []):
+                game_world.add_object(self.maggie, 1)
+                game_world.add_collision_pair('isaac:maggie_pet', common.isaac, self.maggie)
         if not self.item_sold:
             if self.damage_item is None:
-                self.damage_item = DamageItem(600, 500)
+                self.damage_item = DamageItem(600, 600)
 
             if self.damage_item not in sum(game_world.world, []):
                 game_world.add_object(self.damage_item, 1)
@@ -71,6 +82,12 @@ class Stage_4:
         if self.machine:
             game_world.remove_object(self.machine)
 
+        if self.maggie:
+            if self.maggie.state == 'WAITING':
+                game_world.remove_object(self.maggie)
+            else:
+                # 이미 팔린(따라다니는) 상태라면 스테이지 관리 대상에서 제외
+                pass
         for c in self.coins:
             game_world.remove_object(c)
         if self.damage_item:

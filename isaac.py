@@ -156,6 +156,7 @@ class Isaac:
         self.y_dir = 0
         self.max_hp = 10
         self.hp = self.max_hp
+        self.pet = None
         self.damage = 1
         #코인 개수 및 폰트 로드
 
@@ -342,6 +343,8 @@ class Isaac:
             game_world.add_collision_pair('poo:tear', None, tear)
             game_world.add_collision_pair('rock:tear', None, tear)
             game_world.add_collision_pair('charger:tear', None, tear)
+            if self.pet:
+                self.pet.fire_tear(self.face_dir, self.damage)
             self.tear_cooldown = self.tear_reload
 
     def draw_hp(self):
