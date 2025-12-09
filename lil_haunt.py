@@ -26,11 +26,11 @@ class LilHaunt:
         self.state = STATE_ORBIT
 
         # 이미지 설정 (2개 표정 중 하나 선택)
-        self.frame_index = index % 2
+
         self.width, self.height = 30, 30
 
         # 회전 관련 변수
-        self.orbit_radius = 60.0  # 보스와의 거리
+        self.orbit_radius = 100.0  # 보스와의 거리
         self.angle = (2 * math.pi / total) * index  # 3마리가 균등하게 배치되도록 각도 설정
         self.orbit_speed = 3.0  # 회전 속도
 
@@ -91,8 +91,14 @@ class LilHaunt:
         if LilHaunt.image:
             fw = LilHaunt.image.w // 2
             fh = LilHaunt.image.h
+            current_frame_index = 0
+            if self.state == STATE_CHASE:
+                current_frame_index = 1  # 추적 상태일 때는 오른쪽 이미지
+            else:
+                current_frame_index = 0  # 그 외(회전, 복귀)일 때는 왼쪽 이미지
 
-            LilHaunt.image.clip_draw(self.frame_index * fw, 0, fw, fh, sx, sy, 70, 70)
+            # 결정된 프레임으로 그리기
+            LilHaunt.image.clip_draw(current_frame_index * fw, 0, fw, fh, sx, sy, 70, 70)
         else:
             draw_rectangle(sx - 15, sy - 15, sx + 15, sy + 15)
 
