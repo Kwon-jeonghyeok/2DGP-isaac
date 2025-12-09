@@ -16,7 +16,7 @@ class BossBullet:
                 BossBullet.image = None
 
         self.x, self.y = x, y
-        self.speed = 300.0
+        self.speed = 350.0
         self.angle = angle  # 발사 각도 (라디안)
 
         # 붉은색 틴트 효과를 위해 (선택사항)
