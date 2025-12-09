@@ -126,7 +126,7 @@ class Tear:
 
     def handle_collision(self, group, other):
 
-        if group in ('host:tear', 'sucker:tear', 'poo:tear', 'rock:tear','charger:tear'):
+        if group in ('host:tear', 'sucker:tear', 'poo:tear', 'rock:tear','charger:tear', 'boss:tear', 'lilhaunt:tear'):
             if self.consumed:
                 return
             self.consumed = True

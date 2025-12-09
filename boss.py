@@ -2,11 +2,11 @@ from pico2d import *
 import game_framework
 import game_world
 import common
-
+import random
 # =================================================================
 # 보스 이미지 및 애니메이션 상수
 # =================================================================
-FRAME_WIDTH = 100  # 프레임 너비 (실제 이미지에 맞게 수정!)
+FRAME_WIDTH = 100  # 프레임 너비
 FRAME_HEIGHT = 100  # 프레임 높이
 SHEET_HEIGHT = 500  # 시트 전체 높이
 TOP_ROW_Y = SHEET_HEIGHT - FRAME_HEIGHT  # 맨 윗줄 Y좌표
@@ -41,6 +41,10 @@ class MoveW:
         boss.x += boss.dir_x * boss.speed * game_framework.frame_time
         boss.y += boss.dir_y * boss.speed * game_framework.frame_time
 
+        boss.attack_cooldown -= game_framework.frame_time
+        if boss.attack_cooldown <= 0 and len(boss.minions) > 0:
+            boss.change_state(AttackThrow)
+            return
         # 3. 벽 튕기기 (W 패턴)
         if common.stage and hasattr(common.stage, 'get_map_bounds'):
             bounds = common.stage.get_map_bounds()
@@ -74,9 +78,95 @@ class MoveW:
         frame_index = int(boss.frame)
         src_x = frame_index * FRAME_WIDTH
 
-        boss.image.clip_draw(src_x, TOP_ROW_Y, FRAME_WIDTH, FRAME_HEIGHT, sx, sy, boss.width, boss.height)
+        boss.image.clip_draw(src_x, TOP_ROW_Y, FRAME_WIDTH, FRAME_HEIGHT, sx, sy, boss.width * 2.5, boss.height * 2.5)
+
+        l, b, r, t = boss.get_bb()
+        ls, bs = game_world.world_to_screen(l, b)
+        rs, ts = game_world.world_to_screen(r, t)
+        draw_rectangle(ls, bs, rs, ts)
 
 
+# =================================================================
+# [State 2] 잡몹 던지기 패턴 (5초간 추적)
+# =================================================================
+class AttackThrow:
+    @staticmethod
+    def enter(boss):
+        # 타이머 설정 (5초)
+        boss.timer = 5.0
+        # 모든 잡몹에게 추적 명령
+        if not boss.minions:
+            return
+
+        for minion in boss.minions:
+            # 안전하게 메서드가 있는지 확인하고 호출
+            if hasattr(minion, 'start_chase'):
+                minion.start_chase()
+            else:
+                pass
+
+    @staticmethod
+    def exit(boss):
+        # 쿨타임 리셋
+        boss.attack_cooldown = random.uniform(6.0, 8.0)
+        # 모든 잡몹에게 복귀 명령
+        for minion in boss.minions:
+            if hasattr(minion, 'return_to_boss'):
+                minion.return_to_boss()
+
+    @staticmethod
+    def do(boss):
+        # 1. 애니메이션
+        boss.frame = (boss.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % FRAMES_PER_ACTION
+
+        # 2. 이동 (대각선)
+        boss.x += boss.dir_x * boss.speed * game_framework.frame_time
+        boss.y += boss.dir_y * boss.speed * game_framework.frame_time
+
+        boss.attack_cooldown -= game_framework.frame_time
+        # 3. 벽 튕기기 (W 패턴)
+        if common.stage and hasattr(common.stage, 'get_map_bounds'):
+            bounds = common.stage.get_map_bounds()
+            margin_x = boss.width / 2
+            margin_y = boss.height / 2
+
+            map_left = bounds.get('map_left', 0) + margin_x
+            map_right = bounds.get('map_right', 1000) - margin_x
+            map_bottom = bounds.get('map_bottom', 0) + margin_y
+            map_top = bounds.get('map_top', 800) - margin_y
+
+            # 좌우 벽 -> 방향 반전
+            if boss.x > map_right:
+                boss.x = map_right
+                boss.dir_x = -1
+            elif boss.x < map_left:
+                boss.x = map_left
+                boss.dir_x = 1
+
+            # 상하 벽 -> 방향 반전
+            if boss.y > map_top:
+                boss.y = map_top
+                boss.dir_y = -1
+            elif boss.y < map_bottom:
+                boss.y = map_bottom
+                boss.dir_y = 1
+        # 4. 타이머 감소 및 상태 전환
+        boss.timer -= game_framework.frame_time
+        if boss.timer <= 0:
+            boss.change_state(MoveW)
+
+    @staticmethod
+    def draw(boss):
+        sx, sy = game_world.world_to_screen(boss.x, boss.y)
+        frame_index = int(boss.frame)
+        src_x = frame_index * FRAME_WIDTH
+
+        boss.image.clip_draw(src_x, TOP_ROW_Y, FRAME_WIDTH, FRAME_HEIGHT, sx, sy, boss.width * 2.5, boss.height * 2.5)
+
+        l, b, r, t = boss.get_bb()
+        ls, bs = game_world.world_to_screen(l, b)
+        rs, ts = game_world.world_to_screen(r, t)
+        draw_rectangle(ls, bs, rs, ts)
 # =================================================================
 # [Boss Class] 보스 본체
 # =================================================================
@@ -91,7 +181,7 @@ class Boss:
                 Boss.image = None
 
         self.x, self.y = x, y
-        self.width, self.height = FRAME_WIDTH * 2.5, FRAME_HEIGHT * 2.5
+        self.width, self.height = FRAME_WIDTH , FRAME_HEIGHT
         self.speed = 150
         self.hp = 100
 
@@ -99,6 +189,10 @@ class Boss:
         self.dir_y = -1
         self.frame = 0.0
         self.timer = 0.0
+
+        self.timer = 0.0
+        self.attack_cooldown = 3.0  # 처음 시작 후 3초 뒤 패턴 시도
+        self.minions = []  # 잡몹 리스트
 
         self.cur_state = MoveW
         self.cur_state.enter(self)
@@ -118,7 +212,15 @@ class Boss:
             draw_rectangle(*self.get_bb())
 
     def get_bb(self):
-        return self.x - self.width / 2, self.y - self.height / 2, self.x + self.width / 2, self.y + self.height / 2
+        return self.x - self.width / 2 -30, self.y - self.height / 2 - 40, self.x + self.width / 2 +30, self.y + self.height / 2
 
     def handle_collision(self, group, other):
-        pass
+        # 보스 피격 처리
+        if group == 'boss:tear':
+            damage = getattr(other, 'damage', 1)
+            self.hp -= damage
+            if self.hp <= 0:
+                # 보스가 죽으면 잡몹들도 다 제거
+                for m in self.minions:
+                    m.hp = 0
+                game_world.remove_object(self)

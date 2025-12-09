@@ -2,6 +2,7 @@ from pico2d import load_image
 import game_world
 import common
 from boss import Boss
+from lil_haunt import LilHaunt
 
 class Stage_5:
     def __init__(self):
@@ -19,6 +20,7 @@ class Stage_5:
             self.image2 = None
 
         self.is_cleared = False  # 보스를 잡기 전까진 닫혀 있어야 함 (추후 구현)
+        self.minions = []  # 스테이지 레벨에서 관리할 리스트
 
     def get_map_bounds(self):
         # Stage 4와 동일한 맵 크기
@@ -54,18 +56,40 @@ class Stage_5:
             self.image2.clip_composite_draw(50, 40, 50, 52, 0, 'v', dx + 35, dy - 20, 130, 120)
 
     def ensure_obstacles(self):
-        # 추후 보스 몬스터 생성 로직이 들어갈 곳
+        # 보스 생성
         if self.boss is None:
-            # 상단 중앙 쯤에 위치 (맵 중앙 X: 487, 상단 Y: 600 정도)
             self.boss = Boss(487, 600)
 
-            # 보스가 월드에 등록되어 있지 않다면 등록 (레이어 1: 몬스터/아이작 레이어)
+            # 잡몹 3마리 생성
+            self.minions = []
+            for i in range(3):
+                # boss, index, total_count 전달
+                minion = LilHaunt(self.boss, i, 3)
+                self.minions.append(minion)
+
+            # 보스에게 잡몹 리스트 전달
+            self.boss.minions = self.minions
+
+        # 월드 등록
         if self.boss not in sum(game_world.world, []):
             game_world.add_object(self.boss, 1)
-        pass
+            game_world.add_collision_pair('boss:tear', self.boss, None)
+            game_world.add_collision_pair('isaac:boss', None, self.boss)
+
+        # 잡몹 월드 등록 및 충돌 설정
+        for m in self.minions:
+            if m.hp > 0 and m not in sum(game_world.world, []):
+                game_world.add_object(m, 1)
+                # 충돌 그룹 등록 (play_mode에서 하는게 정석이지만 안전장치)
+                game_world.add_collision_pair('isaac:lilhaunt', common.isaac, m)
+                game_world.add_collision_pair('lilhaunt:tear', m, None)
 
     def clear_obstacles(self):
-        # 스테이지를 떠날 때 정리할 것들
         if self.boss:
             game_world.remove_object(self.boss)
-        pass
+
+        for m in self.minions:
+            try:
+                game_world.remove_object(m)
+            except:
+                pass

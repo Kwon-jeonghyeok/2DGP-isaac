@@ -122,3 +122,5 @@ class MaggiePet:
         game_world.add_collision_pair('poo:tear', None, tear)
         game_world.add_collision_pair('rock:tear', None, tear)
         game_world.add_collision_pair('charger:tear', None, tear)
+        game_world.add_collision_pair('boss:tear', None, tear)
+        game_world.add_collision_pair('lilhaunt:tear', None, tear)
