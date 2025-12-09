@@ -28,6 +28,7 @@ class Stage_4:
             'notches': [
                 # 들어온 문 (왼쪽 문이라고 가정 - Stage 3의 오른쪽에서 왔으므로)
                 {'x': 100, 'y': 400, 'w': 50, 'h': 70},
+                {'x': 490, 'y': 700, 'w': 50, 'h': 50},
             ]
         }
 
@@ -44,6 +45,10 @@ class Stage_4:
         # 좌표: x=100, y=400
         dx, dy = game_world.world_to_screen(100, 400)
         self.image2.clip_composite_draw(0, 40, 50, 52, 3.14159 / 2, '', dx, dy, 120, 120)
+        ux, uy = game_world.world_to_screen(490, 700)
+        # 위쪽 문 그리기
+        self.image2.clip_draw(0, 40, 50, 52, ux, uy + 20, 120, 120)
+        self.image2.clip_draw(50, 40, 50, 52, ux - 35, uy + 20, 130, 120)
 
     def ensure_obstacles(self):
 

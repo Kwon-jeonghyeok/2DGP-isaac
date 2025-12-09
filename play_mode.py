@@ -10,6 +10,7 @@ from host import Host
 from sucker import Sucker
 from stage_3 import Stage_3
 from stage_4 import Stage_4
+from stage_5 import Stage_5
 from charger import Charger
 import common
 
@@ -22,6 +23,7 @@ stage_index = 1
 stage_2_instance = None
 stage_3_instance = None
 stage_4_instance = None
+stage_5_instance = None
 def handle_events():
     event_list = get_events()
     for event in event_list:
@@ -35,6 +37,7 @@ def handle_events():
 
 def init():
     global isaac, stage, stage_index, host, sucker, stage_3_instance, chargers, stage_2_instance, stage_4_instance
+    global stage_5_instance
 
     stage = Stage_1()
     common.stage = stage
@@ -48,6 +51,7 @@ def init():
     stage_3_instance = Stage_3()
     stage_2_instance = Stage_2()
     stage_4_instance = Stage_4()
+    stage_5_instance = Stage_5()
 
     chargers = [Charger() for _ in range(2)]
 
@@ -58,7 +62,7 @@ def init():
     game_world.add_collision_pair('isaac:damage_item', common.isaac, None)
     game_world.add_collision_pair('isaac:hp_potion', common.isaac, None)
     game_world.add_collision_pair('isaac:maggie_pet', common.isaac, None)
-
+    game_world.add_collision_pair('boss:tear', None, None)
 
 def _remove_projectiles():
     for layer in list(game_world.world):
@@ -74,6 +78,7 @@ def _remove_projectiles():
 
 def update():
     global stage, stage_index, isaac, host, sucker, stage_3_instance, chargers , stage_2_instance, stage_4_instance
+    global stage_5_instance
 
     if common.isaac is None or stage is None:
         return
@@ -335,6 +340,57 @@ def update():
                 game_world.add_object(c, 1)
                 if common.isaac: game_world.add_collision_pair('isaac:charger', common.isaac, c)
                 game_world.add_collision_pair('charger:tear', c, None)
+
+    # Stage 4 -> Stage 5 (보스룸 진입)
+    if common.isaac.y > 750 and stage_index == 4:
+        _remove_projectiles()
+        try:
+            if hasattr(stage, 'clear_obstacles'): stage.clear_obstacles()
+            game_world.remove_object(stage)
+        except ValueError:
+            pass
+
+        stage = stage_5_instance
+        common.stage = stage
+        game_world.add_object(stage, 0)
+
+        if hasattr(stage, 'ensure_obstacles'):
+            stage.ensure_obstacles()
+
+        stage_index = 5
+
+        # 보스룸 아래쪽 문 앞(490, 200)으로 이동
+        common.isaac.x = 490
+        common.isaac.y = 200
+        common.isaac.prev_x = 490  # 충돌 버그 방지
+        common.isaac.prev_y = 200
+
+        # Stage 5 -> Stage 4 (아래쪽 문 복귀)
+    if common.isaac.y < 125 and stage_index == 5:
+        _remove_projectiles()
+        try:
+            if hasattr(stage, 'clear_obstacles'): stage.clear_obstacles()
+            game_world.remove_object(stage)
+        except ValueError:
+            pass
+
+        stage = stage_4_instance
+        common.stage = stage
+        game_world.add_object(stage, 0)
+
+        # 상점 장애물(아이템, 머신) 다시 확인
+        if hasattr(stage, 'ensure_obstacles'):
+            stage.ensure_obstacles()
+
+        stage_index = 4
+
+        # 상점 위쪽 문 앞(490, 650)으로 이동
+        common.isaac.x = 490
+        common.isaac.y = 650
+        common.isaac.prev_x = 490  # 충돌 버그 방지
+        common.isaac.prev_y = 650
+
+
     if common.isaac.hp <= 0:
         _remove_projectiles()
         game_world.clear()
