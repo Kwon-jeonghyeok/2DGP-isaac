@@ -64,7 +64,10 @@ def init():
     game_world.add_collision_pair('isaac:maggie_pet', common.isaac, None)
     game_world.add_collision_pair('boss:tear', None, None)
     game_world.add_collision_pair('isaac:lilhaunt', common.isaac, None)
+    game_world.add_collision_pair('isaac:boss', common.isaac, None)
     game_world.add_collision_pair('lilhaunt:tear', None, None)
+    game_world.add_collision_pair('isaac:boss_bullet', common.isaac, None)
+    game_world.add_collision_pair('isaac:boss_laser', common.isaac, None)
 
 def _remove_projectiles():
     for layer in list(game_world.world):

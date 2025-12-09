@@ -346,6 +346,7 @@ class Isaac:
             game_world.add_collision_pair('boss:tear', None, tear)
             game_world.add_collision_pair('lilhaunt:tear', None, tear)
 
+
             if self.pet:
                 self.pet.fire_tear(self.face_dir, self.damage)
             self.tear_cooldown = self.tear_reload
@@ -430,9 +431,16 @@ class Isaac:
     def handle_collision(self, group, other):
         # 기존 피해 처리: self.take_damage 그대로 유지
 
-        if group in ('isaac:host', 'host_bullet:isaac', 'isaac:sucker', 'isaac:charger', 'isaac:lilhaunt', 'isaac:boss'):
+        if group in ('isaac:host', 'host_bullet:isaac', 'isaac:sucker', 'isaac:charger', 'isaac:lilhaunt', 'isaac:boss',
+                     'isaac:boss_bullet'):
             try:
                 self.take_damage(1)
+            except Exception:
+                pass
+            return
+        if group in ('isaac:boss_laser'):
+            try:
+                self.take_damage(2)
             except Exception:
                 pass
             return

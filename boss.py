@@ -4,6 +4,8 @@ import game_world
 import common
 import random
 import math
+from boss_bullet import BossBullet
+from boss_laser import BossLaser
 
 # =================================================================
 # 보스 이미지 및 스프라이트 시트 설정
@@ -23,7 +25,7 @@ Y_LINE_1 = SHEET_HEIGHT - FRAME_WIDTH * 1  # 400
 Y_LINE_2 = SHEET_HEIGHT - FRAME_WIDTH * 2  # 300
 Y_LINE_3 = SHEET_HEIGHT - FRAME_WIDTH * 3  # 200
 Y_LINE_4 = SHEET_HEIGHT - FRAME_WIDTH * 4  # 100
-
+Y_LINE_5 = SHEET_HEIGHT - FRAME_WIDTH * 5
 # [기본 상태용]
 ROW_PHASE1 = Y_LINE_1  # 1페이즈 얼굴 (Line 1)
 ROW_PHASE2 = Y_LINE_2  # 2페이즈 해골 얼굴 (Line 3, 예시로 3번째 줄 사용)
@@ -40,11 +42,44 @@ TRANSFORM_SEQUENCE = [
     (Y_LINE_4, 4),  # Line 4, Frame 5
     (Y_LINE_2, 0)  # Line 2, Frame 1
 ]
+# 2. 5발 발사 (총 5프레임)
+# 순서: 2줄(3,4,5) -> 3줄(1,2)
+ATTACK_SPREAD_SEQ = [
+    (Y_LINE_2, 2), (Y_LINE_2, 3), (Y_LINE_2, 4),
+    (Y_LINE_3, 0), (Y_LINE_3, 1) # 마지막(인덱스 4)에 발사
+]
+# 3. 레이저 발사 (총 7프레임)
+# 순서: 2줄(3,4,5) -> 3줄(1,2,3,4)
+# 6,7번째 프레임(인덱스 5,6) 동안 레이저 활성화
+ATTACK_LASER_SEQ = [
+    (Y_LINE_2, 2), (Y_LINE_2, 3), (Y_LINE_2, 4),
+    (Y_LINE_3, 0), (Y_LINE_3, 1),
+    (Y_LINE_3, 2), (Y_LINE_3, 3)
+]
 
 TIME_PER_ACTION = 0.5
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 3
 
+
+def move_left_right_pattern(boss):
+    # 이동
+    boss.x += boss.dir_x * boss.speed * game_framework.frame_time
+
+    # 벽 충돌 및 반전
+    if common.stage and hasattr(common.stage, 'get_map_bounds'):
+        bounds = common.stage.get_map_bounds()
+        margin_x = boss.width / 2
+
+        map_left = bounds.get('map_left', 0) + margin_x
+        map_right = bounds.get('map_right', 1000) - margin_x
+
+        if boss.x > map_right:
+            boss.x = map_right
+            boss.dir_x = -1
+        elif boss.x < map_left:
+            boss.x = map_left
+            boss.dir_x = 1
 
 # =================================================================
 # [State 1] W 이동 상태 (1페이즈 기본)
@@ -178,7 +213,8 @@ class Phase2_MoveLeftRight:
         boss.anim_row = ROW_PHASE2
         boss.dir_x = -1
         boss.dir_y = 0
-        boss.speed = 400
+        boss.speed = 200
+        boss.attack_cooldown = 2.0
 
     @staticmethod
     def exit(boss):
@@ -189,23 +225,113 @@ class Phase2_MoveLeftRight:
         boss.frame = (boss.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 2
         boss.x += boss.dir_x * boss.speed * game_framework.frame_time
 
-        if common.stage and hasattr(common.stage, 'get_map_bounds'):
-            bounds = common.stage.get_map_bounds()
-            margin_x = boss.width / 2
-            map_left = bounds.get('map_left', 0) + margin_x
-            map_right = bounds.get('map_right', 1000) - margin_x
-
-            if boss.x > map_right:
-                boss.x = map_right
-                boss.dir_x = -1
-            elif boss.x < map_left:
-                boss.x = map_left
-                boss.dir_x = 1
+        move_left_right_pattern(boss)
+        boss.attack_cooldown -= game_framework.frame_time
+        if boss.attack_cooldown <= 0:
+            # 50% 확률로 공격 패턴 선택
+            if random.random() < 0.5:
+                boss.change_state(Phase2_AttackSpread)
+            else:
+                boss.change_state(Phase2_AttackLaser)
 
     @staticmethod
     def draw(boss):
         draw_boss_standard(boss)
 
+
+# =================================================================
+# [State 5] 2페이즈 공격 1: 5발 갈래 발사
+# =================================================================
+class Phase2_AttackSpread:
+    @staticmethod
+    def enter(boss):
+        boss.frame = 0.0
+        boss.fired = False  # 발사 여부 플래그
+        boss.speed = 200
+
+    @staticmethod
+    def exit(boss):
+        boss.attack_cooldown = random.uniform(1.5, 2.5)  # 공격 후 쿨타임
+
+    @staticmethod
+    def do(boss):
+        move_left_right_pattern(boss)
+        # 5프레임 애니메이션 재생
+        # 속도 조절
+        boss.frame += 1.5 * ACTION_PER_TIME * game_framework.frame_time
+
+        idx = int(boss.frame)
+
+        # 마지막 프레임(4)에 도달했고 아직 안 쐈다면 발사
+        if idx >= 4 and not boss.fired:
+            # 5발 발사 로직
+            start_angle = -math.pi / 2  # -90도 (아래쪽)
+            # -30, -15, 0, +15, +30 도 (라디안 변환)
+            spread_angles = [-30, -15, 0, 15, 30]
+
+            for deg in spread_angles:
+                rad = math.radians(deg) + start_angle
+                bullet = BossBullet(boss.x, boss.y, rad)
+                game_world.add_object(bullet, 1)
+                game_world.add_collision_pair('isaac:boss_bullet',None , bullet)
+
+            boss.fired = True
+
+        # 애니메이션 끝나면 복귀 (5프레임 재생 후)
+        if idx >= 5:
+            boss.change_state(Phase2_MoveLeftRight)
+
+    @staticmethod
+    def draw(boss):
+        draw_boss_sequence(boss, ATTACK_SPREAD_SEQ)
+
+
+# =================================================================
+# [State 6] 2페이즈 공격 2: 레이저
+# =================================================================
+class Phase2_AttackLaser:
+    @staticmethod
+    def enter(boss):
+        boss.frame = 0.0
+        boss.laser = None
+        boss.speed = 200
+
+    @staticmethod
+    def exit(boss):
+        boss.attack_cooldown = random.uniform(2.0, 3.0)
+        # 상태 나갈 때 레이저 제거 (안전장치)
+        if boss.laser:
+            game_world.remove_object(boss.laser)
+            boss.laser = None
+
+    @staticmethod
+    def do(boss):
+        move_left_right_pattern(boss)
+        # 프레임 애니메이션 재생
+        boss.frame += 1.5 * ACTION_PER_TIME * game_framework.frame_time
+
+        idx = int(boss.frame)
+
+        # 6번째(5), 7번째(6) 프레임일 때 레이저 활성화
+        if idx == 5 or idx == 6:
+            if boss.laser is None:
+                boss.laser = BossLaser(boss)
+                game_world.add_object(boss.laser, 1)
+                game_world.add_collision_pair('isaac:boss_laser',None , boss.laser)
+            # 레이저가 있다면 위치는 BossLaser.update에서 자동 갱신됨
+        else:
+            # 그 외 프레임에선 레이저 제거
+            if boss.laser:
+                game_world.remove_object(boss.laser)
+                boss.laser = None
+
+        # 애니메이션 끝나면 복귀
+        if idx >= 7:
+            boss.change_state(Phase2_MoveLeftRight)
+
+    @staticmethod
+    def draw(boss):
+        draw_boss_sequence(boss, ATTACK_LASER_SEQ)
 
 # =================================================================
 # Helper Functions
@@ -241,6 +367,16 @@ def draw_boss_standard(boss):
     src_x = frame_index * FRAME_WIDTH
     boss.image.clip_draw(src_x, boss.anim_row, FRAME_WIDTH, FRAME_HEIGHT, sx, sy, boss.width * 2.5, boss.height * 2.5)
 
+
+def draw_boss_sequence(boss, sequence):
+    sx, sy = game_world.world_to_screen(boss.x, boss.y)
+    idx = int(boss.frame)
+    if idx >= len(sequence): idx = len(sequence) - 1
+
+    src_y, frame_idx = sequence[idx]
+    src_x = frame_idx * FRAME_WIDTH
+
+    boss.image.clip_draw(src_x, src_y, FRAME_WIDTH, FRAME_HEIGHT, sx, sy, boss.width *2.5, boss.height*2.5)
 
 # =================================================================
 # [Boss Class]
