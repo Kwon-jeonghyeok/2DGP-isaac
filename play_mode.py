@@ -24,6 +24,9 @@ stage_2_instance = None
 stage_3_instance = None
 stage_4_instance = None
 stage_5_instance = None
+
+boss_intro_timer = 0.0
+boss_intro_image = None
 def handle_events():
     event_list = get_events()
     for event in event_list:
@@ -37,7 +40,11 @@ def handle_events():
 
 def init():
     global isaac, stage, stage_index, host, sucker, stage_3_instance, chargers, stage_2_instance, stage_4_instance
-    global stage_5_instance
+    global stage_5_instance,boss_intro_image
+    try:
+        boss_intro_image = load_image('resource/boss_intro.png')
+    except:
+        boss_intro_image = None
 
     stage = Stage_1()
     common.stage = stage
@@ -83,8 +90,11 @@ def _remove_projectiles():
 
 def update():
     global stage, stage_index, isaac, host, sucker, stage_3_instance, chargers , stage_2_instance, stage_4_instance
-    global stage_5_instance
+    global stage_5_instance, boss_intro_timer
 
+    if boss_intro_timer > 0:
+        boss_intro_timer -= game_framework.frame_time
+        return
     if common.isaac is None or stage is None:
         return
 
@@ -369,6 +379,7 @@ def update():
         common.isaac.y = 200
         common.isaac.prev_x = 490  # 충돌 버그 방지
         common.isaac.prev_y = 200
+        boss_intro_timer = 3.0
 
         # Stage 5 -> Stage 4 (아래쪽 문 복귀)
     if common.isaac.y < 125 and stage_index == 5:
@@ -407,6 +418,11 @@ def update():
 def draw():
     clear_canvas()
     game_world.render()
+    if boss_intro_timer > 0:
+        if boss_intro_image:
+            boss_intro_image.draw(500, 400, 1000,800)
+        else:
+            pass
     update_canvas()
 
 def finish():

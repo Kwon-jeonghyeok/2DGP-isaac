@@ -6,6 +6,7 @@ import random
 import math
 from boss_bullet import BossBullet
 from boss_laser import BossLaser
+import clear_mode
 
 # =================================================================
 # 보스 이미지 및 스프라이트 시트 설정
@@ -478,6 +479,5 @@ class Boss:
             damage = getattr(other, 'damage', 1)
             self.hp -= damage
             if self.hp <= 0:
-                for m in self.minions:
-                    m.hp = 0
-                game_world.remove_object(self)
+                print("Game Clear!")
+                game_framework.change_mode(clear_mode)

@@ -36,7 +36,7 @@ class LilHaunt:
 
         # 이동 관련 변수
         self.x, self.y = boss.x, boss.y  # 초기 위치
-        self.speed = 200.0  # 추적 속도
+        self.speed = 150.0  # 추적 속도
 
         self.hp = 3
 
