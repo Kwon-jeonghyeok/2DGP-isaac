@@ -7,11 +7,12 @@ from stage_1 import Stage_1
 
 
 def init():
-    global image
+    global image, win_s
     try:
         image = load_image('resource/game_clear.png')
     except:
         image = None
+
 
 def finish():
     global image

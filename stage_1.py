@@ -1,4 +1,6 @@
 from pico2d import load_image
+import pico2d
+from pico2d import *
 
 
 class Stage_1:
@@ -6,6 +8,8 @@ class Stage_1:
         self.image = load_image('resource/rooms/Rooms_Basement-1.png')
         self.image1 = load_image('resource/rooms/Rooms_Basement_2.png')
         self.image2 = load_image('resource/objects/Door_1.png')
+
+
     def get_map_bounds(self):
         return {
             'map_left': 100,

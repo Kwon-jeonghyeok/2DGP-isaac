@@ -22,7 +22,8 @@ class Machine:
                 Machine.image = None
 
         self.x, self.y = x, y
-
+        self.coin_slot_s = load_wav('resource/sound/Coin_Slot.mp3')
+        self.coin_slot_s.set_volume(5)
         self.frame_width = 51
         self.frame_height = 60
         if Machine.image:
@@ -81,6 +82,7 @@ class Machine:
                 return
 
             if common.isaac and common.isaac.coin_count >= self.price:
+                self.coin_slot_s.play(1)
                 common.isaac.coin_count -= self.price
 
                 self.state = 'ACTIVE'

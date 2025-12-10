@@ -23,6 +23,10 @@ class Host:
         Host._instances.append(self)
         self.frame = 0.0
         self.hp = 3
+        self.dead_s = load_wav('resource/sound/monster_dead.mp3')
+        self.dead_s.set_volume(5)
+        self.attack_s = load_wav('resource/sound/host_attack_start.mp3')
+        self.attack_s.set_volume(5)
 
         # 초기화 시 안전한 위치 찾기 실행
         # (x, y 좌표가 여기서 결정됨)
@@ -126,6 +130,7 @@ class Host:
         """game_world에서 안전하게 제거하고 내부 리스트에서 자신을 제거."""
         try:
             game_world.remove_object(self)
+            self.dead_s.play(1)
         except Exception:
             pass
         try:
@@ -211,6 +216,7 @@ class Host:
         self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * dtf) % FRAMES_PER_ACTION
 
     def _start_attack(self):
+        self.attack_s.play(1)
         self.state = 'attack'
         self._attack_timer = self.attack_duration
         self._shoot_timer = 0.0
@@ -257,6 +263,9 @@ class HostBullet:
         self.x = x
         self.y = y
         self.speed = 320.0
+        self.tear_s = load_wav('resource/sound/host_tears_Fire.mp3')
+        self.tear_s.set_volume(5)
+        self.tear_s.play(1)
         dx = tx - x
         dy = ty - y
         dist = (dx * dx + dy * dy) ** 0.5

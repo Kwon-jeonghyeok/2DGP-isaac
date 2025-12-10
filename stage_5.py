@@ -1,11 +1,15 @@
-from pico2d import load_image
+from pico2d import *
 import game_world
 import common
 from boss import Boss
 from lil_haunt import LilHaunt
+import play_mode
+
 
 class Stage_5:
     def __init__(self):
+
+
         self.boss = None
         try:
             # 보스룸 배경 이미지 로드
@@ -13,6 +17,9 @@ class Stage_5:
         except Exception:
             print("ERROR: Boss_Room.png not found")
             self.image = None
+
+
+
 
 
         self.is_cleared = False  # 보스를 잡기 전까진 닫혀 있어야 함 (추후 구현)
@@ -43,8 +50,10 @@ class Stage_5:
             self.image.composite_draw(0, 'hv', 750, 200, 500, 400)
 
     def ensure_obstacles(self):
+
         # 보스 생성
         if self.boss is None:
+
             self.boss = Boss(487, 600)
 
             # 잡몹 3마리 생성

@@ -1,4 +1,4 @@
-from pico2d import load_image
+from pico2d import *
 import game_world
 import common
 from rock import Rock
@@ -9,6 +9,7 @@ class Stage_2:
     def __init__(self):
         self.image = load_image('resource/rooms/Rooms_Basement-1.png')
         self.image2 = load_image('resource/objects/Door_1.png')
+
 
         self.rocks = []
         self.poos = []

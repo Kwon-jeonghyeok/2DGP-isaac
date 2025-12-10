@@ -1,4 +1,4 @@
-from pico2d import load_image
+from pico2d import *
 import game_world
 import common
 from machine import Machine

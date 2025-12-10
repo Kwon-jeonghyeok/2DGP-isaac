@@ -27,6 +27,13 @@ class Tear:
         else:
             self.frame_y = 215
             self.frame_x = 280
+        self.attack_s = load_wav('resource/sound/Tears_Fire.mp3')
+        self.attack_s.set_volume(32)
+        self.attack_s.play(1)
+
+        self.tear_boom_s = load_wav('resource/sound/TearImpacts.mp3')
+        self.tear_boom_s.set_volume(5)
+
 
         # 이동/폭발 상태 관리
         self.moving = True
@@ -112,6 +119,7 @@ class Tear:
                 return
         else:
             # 폭발 애니메이션 속도(프레임/초 기반)
+            self.tear_boom_s.play(1)
             self.explosion_frame += FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time
 
             # 애니메이션이 끝나면 객체 제거
@@ -127,6 +135,7 @@ class Tear:
     def handle_collision(self, group, other):
 
         if group in ('host:tear', 'sucker:tear', 'poo:tear', 'rock:tear','charger:tear', 'boss:tear', 'lilhaunt:tear'):
+
             if self.consumed:
                 return
             self.consumed = True

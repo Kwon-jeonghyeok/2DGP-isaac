@@ -26,6 +26,8 @@ class LilHaunt:
         self.state = STATE_ORBIT
 
         # 이미지 설정 (2개 표정 중 하나 선택)
+        self.dead_s = load_wav('resource/sound/monster_dead.mp3')
+        self.dead_s.set_volume(5)
 
         self.width, self.height = 30, 30
 
@@ -122,6 +124,7 @@ class LilHaunt:
         try:
             # 게임 월드에서 제거 시도
             game_world.remove_object(self)
+            self.dead_s.play(1)
         except Exception:
             return
 

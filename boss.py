@@ -63,6 +63,7 @@ ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 3
 
 
+
 def move_left_right_pattern(boss):
     # 이동
     boss.x += boss.dir_x * boss.speed * game_framework.frame_time
@@ -161,6 +162,9 @@ class AttackThrow:
 class TransformMoveToCorner:
     @staticmethod
     def enter(boss):
+        change_s = load_wav('resource/sound/boss_change.wav')
+        change_s.set_volume(5)
+        change_s.play(1)
         # 우측 상단 목표
         boss.target_x = 800
         boss.target_y = 650
@@ -174,6 +178,7 @@ class TransformMoveToCorner:
     @staticmethod
     def do(boss):
         # 8프레임 애니메이션
+
         boss.frame += 1.5 * ACTION_PER_TIME * game_framework.frame_time
         is_anim_finished = False
         if boss.frame >= 7.0:
@@ -247,6 +252,8 @@ class Phase2_MoveLeftRight:
 # =================================================================
 # [State 5] 2페이즈 공격 1: 5발 갈래 발사
 # =================================================================
+
+
 class Phase2_AttackSpread:
     @staticmethod
     def enter(boss):
@@ -269,6 +276,9 @@ class Phase2_AttackSpread:
 
         # 마지막 프레임(4)에 도달했고 아직 안 쐈다면 발사
         if idx >= 4 and not boss.fired:
+            spit_s = load_wav('resource/sound/boss_spit.mp3')
+            spit_s.set_volume(5)
+            spit_s.play(1)
             # 5발 발사 로직
             start_angle = -math.pi / 2  # -90도 (아래쪽)
             spread_angles = [-45, -20, 0, 20, 45]
@@ -319,6 +329,10 @@ class Phase2_AttackLaser:
         # 6번째(5), 7번째(6) 프레임일 때 레이저 활성화
         if idx == 5 or idx == 6:
             if boss.laser is None:
+                laser = load_wav('resource/sound/boss_laser.mp3')
+                laser.set_volume(5)
+
+                laser.play(1)
                 boss.laser = BossLaser(boss)
                 game_world.add_object(boss.laser, 1)
                 game_world.add_collision_pair('isaac:boss_laser',None , boss.laser)
@@ -420,6 +434,10 @@ class Boss:
         self.speed = 150
         self.max_hp = 100
         self.hp = 100
+        self.dead_s = load_wav('resource/sound/boss_dead.mp3')
+        self.dead_s.set_volume(5)
+
+
 
         self.is_dying = False
 
@@ -447,6 +465,7 @@ class Boss:
 
             # 애니메이션 끝났는지 확인 (6장 다 보여주면)
             if self.frame >= 6.0:
+                self.dead_s.play(1)
                 self.hp = 0
                 game_world.remove_object(self)
                 game_framework.change_mode(clear_mode)
@@ -516,6 +535,8 @@ class Boss:
 
             # [수정] 0 이하가 될 것 같으면 사망 프로세스 시작
             if potential_hp <= 0:
+
+
                 self.hp = 0.1
                 self.is_dying = True
                 self.frame = 0.0  # 사망 애니메이션용 프레임 초기화

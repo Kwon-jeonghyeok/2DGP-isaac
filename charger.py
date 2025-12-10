@@ -1,4 +1,4 @@
-from pico2d import load_image, draw_rectangle
+from pico2d import *
 import game_world
 import random
 import game_framework
@@ -41,6 +41,10 @@ class Charger:
 
         self.size_x = 20
         self.size_y = 25
+        self.dead_s = load_wav('resource/sound/monster_dead.mp3')
+        self.dead_s.set_volume(5)
+        self.attack_s = load_wav('resource/sound/charger_attack.mp3')
+        self.attack_s.set_volume(5)
 
         self._init_position()
         Charger._instances.append(self)
@@ -185,6 +189,7 @@ class Charger:
 
             # 수평 이동 중일 때
             if self.charge_dir[0] != 0:
+                self.attack_s.play(1)
                 if dy < ALIGN_TOL:  # 여전히 Y축 정렬 상태여야 함
                     if (self.charge_dir[0] > 0 and target.x > self.x) or \
                             (self.charge_dir[0] < 0 and target.x < self.x):
@@ -192,6 +197,7 @@ class Charger:
 
             # 수직 이동 중일 때
             elif self.charge_dir[1] != 0:
+                self.attack_s.play(1)
                 if dx < ALIGN_TOL:  # 여전히 X축 정렬 상태여야 함
                     if (self.charge_dir[1] > 0 and target.y > self.y) or \
                             (self.charge_dir[1] < 0 and target.y < self.y):
@@ -318,5 +324,6 @@ class Charger:
 
     def destroy(self):
         game_world.remove_object(self)
+        self.dead_s.play(1)
         if self in Charger._instances:
             Charger._instances.remove(self)

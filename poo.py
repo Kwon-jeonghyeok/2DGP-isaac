@@ -1,5 +1,5 @@
 # python
-from pico2d import load_image, draw_rectangle
+from pico2d import *
 import game_world
 import random
 from coin import Coin
@@ -18,6 +18,8 @@ class Poo:
         self.y = float(y)
         self.w = float(w)
         self.h = float(h)
+        self.destroy_s = load_wav('resource/sound/poop_pop.mp3')
+        self.destroy_s.set_volume(3)
 
         self.frame = 0           # 현재 표시할 프레임 (0..4)
         self.hit_count = 0       # 맞은 횟수
@@ -55,6 +57,7 @@ class Poo:
     def destroy(self):
         try:
             game_world.remove_object(self)
+            self.destroy_s.play(1)
         except Exception:
             pass
         self.destroyed = True

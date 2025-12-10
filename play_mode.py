@@ -1,6 +1,7 @@
 from pico2d import *
 import game_framework
 import game_world
+import stage_1
 import title_mode
 
 from isaac import Isaac
@@ -24,7 +25,9 @@ stage_2_instance = None
 stage_3_instance = None
 stage_4_instance = None
 stage_5_instance = None
+bgm1 = None
 
+bgm = None
 boss_intro_timer = 0.0
 boss_intro_image = None
 def handle_events():
@@ -40,11 +43,16 @@ def handle_events():
 
 def init():
     global isaac, stage, stage_index, host, sucker, stage_3_instance, chargers, stage_2_instance, stage_4_instance
-    global stage_5_instance,boss_intro_image
+    global stage_5_instance,boss_intro_image, bgm,bgm1
+    bgm1 = load_music('resource/sound/boss_intro.mp3')
+    bgm1.set_volume(16)
     try:
         boss_intro_image = load_image('resource/boss_intro.png')
     except:
         boss_intro_image = None
+    bgm = load_music('resource/sound/base_bgm.mp3')
+    bgm.set_volume(16)
+    bgm.repeat_play()
 
     stage = Stage_1()
     common.stage = stage
@@ -87,37 +95,47 @@ def _remove_projectiles():
                     game_world.remove_object(o)
                 except Exception:
                     pass
-
+boss_bgm_started = False
 def update():
     global stage, stage_index, isaac, host, sucker, stage_3_instance, chargers , stage_2_instance, stage_4_instance
-    global stage_5_instance, boss_intro_timer
+    global stage_5_instance, boss_intro_timer, bgm,bgm1, boss_bgm_started
 
     if boss_intro_timer > 0:
         boss_intro_timer -= game_framework.frame_time
+        if boss_intro_timer <= 0:
+            try:
+                if bgm and not boss_bgm_started:
+                    bgm.repeat_play()
+                    boss_bgm_started = True
+            except Exception:
+                pass
+
+
+
         return
     if common.isaac is None or stage is None:
         return
 
     game_world.update()
-
-    if stage_index == 2:
-        # Host가 모두 죽으면 클리어
-        alive_host = [h for h in host if h.hp > 0]
-        if len(alive_host) == 0:
-            stage.is_cleared = True
-        else:
-            stage.is_cleared = False
-    elif stage_index == 3:
-        # Sucker와 Charger가 모두 죽으면 클리어
-        alive_sucker = [s for s in sucker if s.hp > 0]
-        alive_charger = [c for c in chargers if c.hp > 0]
-        if len(alive_sucker) == 0 and len(alive_charger) == 0:
-            stage.is_cleared = True
-        else:
-            stage.is_cleared = False
-    elif stage_index == 1:
-        # 스테이지 1은 몬스터가 없으므로 항상 클리어
-        stage.is_cleared = True
+    #
+    # if stage_index == 2:
+    #     # Host가 모두 죽으면 클리어
+    #     alive_host = [h for h in host if h.hp > 0]
+    #     if len(alive_host) == 0:
+    #         stage.is_cleared = True
+    #     else:
+    #         stage.is_cleared = False
+    # elif stage_index == 3:
+    #     # Sucker와 Charger가 모두 죽으면 클리어
+    #     alive_sucker = [s for s in sucker if s.hp > 0]
+    #     alive_charger = [c for c in chargers if c.hp > 0]
+    #     if len(alive_sucker) == 0 and len(alive_charger) == 0:
+    #         stage.is_cleared = True
+    #     else:
+    #         stage.is_cleared = False
+    # elif stage_index == 1:
+    #     # 스테이지 1은 몬스터가 없으므로 항상 클리어
+    #     stage.is_cleared = True
 
     bounds = stage.get_map_bounds()
     common.isaac.apply_map_bounds(bounds)
@@ -150,7 +168,7 @@ def update():
     game_world.handle_collision()
 
     # Stage_1 -> Stage_2
-    if common.isaac.y > 750 and stage_index == 1 and stage.is_cleared:
+    if common.isaac.y > 750 and stage_index == 1: #and stage.is_cleared:
         _remove_projectiles()
         try:
             game_world.remove_object(stage)
@@ -172,7 +190,7 @@ def update():
         common.isaac.y = 175
 
     # Stage_2 -> Stage_1 (돌아갈 때)
-    if common.isaac.y < 125 and stage_index == 2 and stage.is_cleared:
+    if common.isaac.y < 125 and stage_index == 2:# and stage.is_cleared:
         _remove_projectiles()
         try:
             if hasattr(stage, 'clear_obstacles'):
@@ -192,7 +210,7 @@ def update():
         common.isaac.y = 700
 
     # Stage_2 -> Stage_3 (진입)
-    if common.isaac.y > 750 and stage_index == 2 and stage.is_cleared:
+    if common.isaac.y > 750 and stage_index == 2:# and stage.is_cleared:
         _remove_projectiles()
         try:
             if hasattr(stage, 'clear_obstacles'):
@@ -248,7 +266,7 @@ def update():
                 except Exception:
                     pass
     # Stage_3 -> Stage_2 (이탈 시 sucker 안전 제거)
-    if common.isaac.y < 125 and stage_index == 3 and stage.is_cleared:
+    if common.isaac.y < 125 and stage_index == 3:# and stage.is_cleared:
         _remove_projectiles()
         try:
             try:
@@ -289,7 +307,7 @@ def update():
             game_world.add_collision_pair('isaac:host', None, h)
             game_world.add_collision_pair('host:tear', h, None)
 
-    if common.isaac.x > 1450 and stage_index == 3 and stage.is_cleared:
+    if common.isaac.x > 1450 and stage_index == 3:# and stage.is_cleared:
         _remove_projectiles()
         try:
             if hasattr(stage, 'clear_obstacles'): stage.clear_obstacles()
@@ -358,10 +376,21 @@ def update():
 
     # Stage 4 -> Stage 5 (보스룸 진입)
     if common.isaac.y > 750 and stage_index == 4:
+        bgm.stop()
+        bgm = load_music('resource/sound/boss_bgm.mp3')
+        bgm.set_volume(16)
+
+        boss_bgm_started = False
+
+
         _remove_projectiles()
         try:
             if hasattr(stage, 'clear_obstacles'): stage.clear_obstacles()
             game_world.remove_object(stage)
+
+            bgm1.play(1)
+
+
         except ValueError:
             pass
 
@@ -379,7 +408,7 @@ def update():
         common.isaac.y = 200
         common.isaac.prev_x = 490  # 충돌 버그 방지
         common.isaac.prev_y = 200
-        boss_intro_timer = 3.0
+        boss_intro_timer = 6.0
 
         # Stage 5 -> Stage 4 (아래쪽 문 복귀)
     if common.isaac.y < 125 and stage_index == 5:

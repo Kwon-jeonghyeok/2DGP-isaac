@@ -1,4 +1,4 @@
-from pico2d import load_image, get_time , draw_rectangle, load_font
+from pico2d import *
 from sdl2 import SDL_KEYDOWN, SDLK_s, SDLK_d, SDL_KEYUP, SDLK_a, SDLK_w, SDLK_SPACE
 from state_machine import StateMachine
 import game_world
@@ -29,7 +29,7 @@ def space_down(e):
 
 #아이작 속도
 PIXEL_PER_METER = (10.0 / 0.3)  # 10 pixel 30 cm
-RUN_SPEED_KMPH = 20.0  # Km / Hour
+RUN_SPEED_KMPH = 60.0  # Km / Hour
 RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
 RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
@@ -154,6 +154,17 @@ class Isaac:
         self.death_timer = 0.0
 
         self.coin_count = 0
+
+        self.hurt_s = load_wav('resource/sound/isaac_hurt.wav')
+        self.hurt_s.set_volume(5)
+        self.pet_get_s = load_wav('resource/sound/pet_get.mp3')
+        self.pet_get_s.set_volume(5)
+        self.coin_get_s = load_wav('resource/sound/coin_get.mp3')
+        self.coin_get_s.set_volume(5)
+        self.dead_s = load_wav('resource/sound/isaac_dead.mp3')
+        self.dead_s.set_volume(5)
+
+
 
         try:
             self.font = load_font('resource/upheaval-tt-brk.upheaval-tt-brk.ttf', 24)
@@ -402,12 +413,16 @@ class Isaac:
         return self.hp
 
     def take_damage(self, amount):
+
         if self.is_dying: return self.hp
+
         if self.is_invulnerable:
             return self.hp
+        self.hurt_s.play(1)
         old_hp = getattr(self, 'hp', 0)
         potential_hp = old_hp - abs(int(amount))
         if potential_hp <= 0:
+            self.dead_s.play(1)
             self.hp = 0.1  # 0.1로 고정하여 play_mode에서 삭제되는 것 방지
             self.is_dying = True
             self.death_timer = 0.0
@@ -467,27 +482,33 @@ class Isaac:
                      'isaac:boss_bullet'):
             try:
                 self.take_damage(1)
+
             except Exception:
                 pass
             return
         if group in ('isaac:boss_laser'):
             try:
                 self.take_damage(2)
+
             except Exception:
                 pass
             return
         if group == 'isaac:coin':
+            self.coin_get_s.play(1)
             self.coin_count += 1
             return
 
         if group == 'isaac:hp_potion':
+            self.pet_get_s.play(1)
             # 체력 회복 (최대 체력까지만)
+
             if self.hp < self.max_hp:
                 self.heal(2)  # 하트 1칸(2 HP) 회복
             return  # 물약은 획득 후 사라짐 (HPPotion 쪽에서 remove_object 호출됨)
         # 장애물(Rock, Poo) 충돌: 최소 보정 + 너무 작은 보정은 무시해서 흔들림 제거
         if group == 'isaac:damage_item':
             # other는 DamageItem 객체
+            self.pet_get_s.play(1)
             if self.coin_count >= other.price:
                 self.coin_count -= other.price
                 self.damage += 1  # 공격력 증가

@@ -1,4 +1,4 @@
-from pico2d import load_image, draw_rectangle
+from pico2d import *
 import game_world
 import random
 import math
@@ -63,6 +63,12 @@ class Sucker:
         self.state = 'idle'
         self.speed =0.0
         self.dir = 0.0
+        self.fly_s = load_wav('resource/sound/Fly_Buzz_Loop.mp3')
+        self.fly_s.set_volume(3)
+
+        self.dead_s = load_wav('resource/sound/monster_dead.mp3')
+        self.dead_s.set_volume(5)
+
 
         self.patrol_center = (self.x, self.y)
         self.patrol_range = random.randint(40, 160)  # 각자 다른 범위
@@ -91,6 +97,8 @@ class Sucker:
         """game_world에서 제거하고 내부 추적 리스트에서 자신을 제거."""
         try:
             game_world.remove_object(self)
+
+            self.dead_s.play(1)
         except Exception:
             # 이미 제거된 경우 무시
             pass
@@ -102,6 +110,8 @@ class Sucker:
     def _find_stage_bounds(self):
         if common.stage and hasattr(common.stage, 'get_map_bounds'):
             return common.stage.get_map_bounds()
+
+
         return None
 
     def _is_position_free(self, x, y):
@@ -184,6 +194,7 @@ class Sucker:
         distance2 = (x1 - x2) ** 2 + (y1 - y2) ** 2
         return distance2 < (PIXEL_PER_METER*r) ** 2
     def move_little_to(self, tx, ty):
+
         self.dir = math.atan2(ty-self.y, tx-self.x)
         distance = RUN_SPEED_PPS * game_framework.frame_time
         self.x += distance * math.cos(self.dir)
@@ -204,8 +215,10 @@ class Sucker:
         self.state = 'Fly'
         self.move_little_to(common.isaac.x, common.isaac.y)
         if self.distance_less_than(common.isaac.x, common.isaac.y, self.x, self.y, r):
+            self.fly_s.repeat_play()
             return BehaviorTree.SUCCESS
         else:
+            self.fly_s.stop()
             return BehaviorTree.RUNNING
 
     def get_patrol_location(self):
