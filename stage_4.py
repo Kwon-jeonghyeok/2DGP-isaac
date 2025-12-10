@@ -11,6 +11,7 @@ class Stage_4:
     def __init__(self):
         self.image = load_image('resource/rooms/Rooms_Basement-1.png')
         self.image2 = load_image('resource/objects/Door_1.png')
+        self.image3 = load_image('resource/objects/boss_door.png')
         self.maggie = None
         self.machine = None
         self.damage_item = None
@@ -49,8 +50,9 @@ class Stage_4:
 
         ux, uy = game_world.world_to_screen(490, 700)
         # 위쪽 문 그리기
-        self.image2.clip_draw(0, 40, 50, 52, ux, uy + 20, 120, 120)
-        self.image2.clip_draw(50, 40, 50, 52, ux - 35, uy + 20, 130, 120)
+        self.image3.clip_draw(73, 40, 46, 52, ux, uy + 35, 130, 120)
+        self.image3.clip_draw(0, 40, 64, 52, ux, uy + 35, 120, 120)
+
 
     def ensure_obstacles(self):
 
