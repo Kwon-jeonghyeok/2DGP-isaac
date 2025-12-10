@@ -7,6 +7,7 @@ from tear import Tear
 
 class MaggiePet:
     image = None
+    image2 = None
     # 메기펫 스프라이트 한 칸의 크기 (아이작과 동일하게 64x64로 가정)
     # 만약 이미지가 잘려 보이거나 밀리면 이 값을 실제 이미지에 맞춰 수정해주세요.
     FRAME_WIDTH, FRAME_HEIGHT = 32, 32
@@ -14,11 +15,17 @@ class MaggiePet:
     def __init__(self, x, y):
         if MaggiePet.image is None:
             try:
-                # [수정] 실제 이미지 파일 로드
+                # 실제 이미지 파일 로드
                 MaggiePet.image = load_image('resource/maggie.png')
             except:
                 print("ERROR: Could not load 'resource/maggie.png'")
                 MaggiePet.image = None
+        if MaggiePet.image2 is None:
+            try:
+                MaggiePet.image2 = load_image('resource/objects/maggie_item.png')
+            except:
+                print("ERROR: Could not load 'resource/objects/maggie_item.png'")
+                MaggiePet.image2 = None
 
         self.x, self.y = x, y
         self.state = 'WAITING'
@@ -80,6 +87,10 @@ class MaggiePet:
 
         # 화면에 그릴 크기
         draw_w, draw_h = 48,48
+        if self.state == 'WAITING':
+            # 대기 상태에서는 아이템 이미지 그리기
+            MaggiePet.image2.draw(sx, sy, 80, 120)
+            return
 
         if flip_h:
             # 좌우 반전 그리기
