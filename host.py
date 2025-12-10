@@ -59,7 +59,7 @@ class Host:
 
         # 맵 내부 스폰 가능 범위
         left, right = 150, 850
-        bottom, top = 250, 650
+        bottom, top = 310, 700
 
         while attempt < max_attempts and not found:
             cx = random.randint(left, right)
