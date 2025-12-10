@@ -108,6 +108,7 @@ class Charger:
         for layer in game_world.world:
             for o in layer:
                 if o is self or o is common.isaac: continue
+                if o.__class__.__name__ == 'Sucker': continue
                 if not hasattr(o, 'get_bb'): continue
                 lb, bb, rb, tb = o.get_bb()
                 if not (la > rb or ra < lb or ta < bb or ba > tb):
