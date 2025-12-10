@@ -383,7 +383,8 @@ def draw_boss_sequence(boss, sequence):
 # =================================================================
 class Boss:
     image = None
-
+    hp_fill_image = None  # 체력바 채움용
+    hp_frame_image = None  # [추가] 체력바 틀 이미지
     def __init__(self, x, y):
         if Boss.image is None:
             try:
@@ -391,9 +392,23 @@ class Boss:
             except:
                 Boss.image = None
 
+        if Boss.hp_fill_image is None:
+            try:
+                # 레이저 이미지 로드
+                Boss.hp_fill_image = load_image('resource/BOSS/laser.png')
+            except:
+                Boss.hp_fill_image = None
+
+            # 3. 체력바 틀 이미지
+        if Boss.hp_frame_image is None:
+            try:
+                Boss.hp_frame_image = load_image('resource/BOSS/hp_bar.png')
+            except:
+                Boss.hp_frame_image = None
         self.x, self.y = x, y
         self.width, self.height = FRAME_WIDTH , FRAME_HEIGHT
         self.speed = 150
+        self.max_hp = 100
         self.hp = 100
 
         self.dir_x = 1
@@ -420,6 +435,37 @@ class Boss:
             self.cur_state.draw(self)
         else:
             draw_rectangle(*self.get_bb())
+        self.draw_hp_bar()
+    def draw_hp_bar(self):
+        frame_x = 500
+        frame_y = 50
+
+        if Boss.hp_frame_image is None: return
+
+        frame_w = Boss.hp_frame_image.w * 2
+        frame_h = Boss.hp_frame_image.h * 2
+        Boss.hp_frame_image.draw(frame_x, frame_y, frame_w, frame_h)
+        # --- 1. 붉은색 게이지 (레이저 이미지) 그리기 ---
+        if Boss.hp_fill_image:
+            padding_x = 34
+            padding_y = 18
+
+            inner_max_w = frame_w - (padding_x * 2)
+            inner_h = frame_h - (padding_y * 2)
+
+            ratio = max(0, self.hp / self.max_hp)
+            current_fill_w = inner_max_w * ratio
+
+            fill_draw_x = (frame_x - frame_w / 2) + padding_x + (current_fill_w / 2)
+            fill_draw_y = frame_y
+
+            if current_fill_w > 0:
+                Boss.hp_fill_image.clip_draw(
+                    40, 40,1,1 ,  # 소스 (이미지 전체)
+                    fill_draw_x +15, fill_draw_y -3,  # 위치
+                    current_fill_w, inner_h  # 크기 (가로로 늘어남)
+                )
+
 
     def get_bb(self):
         return self.x - self.width / 2 -30, self.y - self.height / 2 -40, self.x + self.width / 2 + 30, self.y + self.height / 2
