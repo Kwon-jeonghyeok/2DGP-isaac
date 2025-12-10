@@ -50,6 +50,7 @@ class Idle:
 
     def exit(self, e):
         if space_down(e):
+            self.isaac.tear_y = self.isaac.tear_y*-1
             self.isaac.fire_tear()
     def do(self):
         pass
@@ -101,6 +102,7 @@ class Walk:
 
     def exit(self, e):
         if space_down(e):
+            self.isaac.tear_y = self.isaac.tear_y*-1
             self.isaac.fire_tear()
 
     def do(self):
@@ -145,6 +147,7 @@ class Isaac:
         self.hp = self.max_hp
         self.pet = None
         self.damage = 1
+        self.tear_y = 10
         #코인 개수 및 폰트 로드
 
         #self.coin_count = 0
@@ -323,7 +326,7 @@ class Isaac:
         if self.is_invulnerable:
             return
         if self.tear_cooldown <= 0.0:
-            tear = Tear(self.x, self.y, self.face_dir, damage= self.damage)
+            tear = Tear(self.x + self.tear_y + 20, self.y + self.tear_y, self.face_dir, damage= self.damage)
             game_world.add_object(tear, 1)
             game_world.add_collision_pair('host:tear', None, tear)
             game_world.add_collision_pair('sucker:tear', None, tear)
