@@ -18,6 +18,10 @@ class BossLaser:
         self.x = owner.x -10
         # 보스 중심에서 약간 아래쪽부터 바닥까지 커버
         self.y = owner.y - 400
+        self.laser = load_wav('resource/sound/boss_laser.mp3')
+        self.laser.set_volume(15)
+
+        self.laser.play(1)
 
         self.width = 120  # 레이저 두께
         self.height = 800  # 맵 전체 높이 커버

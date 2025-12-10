@@ -26,6 +26,8 @@ stage_3_instance = None
 stage_4_instance = None
 stage_5_instance = None
 bgm1 = None
+open_s = None
+
 
 bgm = None
 boss_intro_timer = 0.0
@@ -43,9 +45,11 @@ def handle_events():
 
 def init():
     global isaac, stage, stage_index, host, sucker, stage_3_instance, chargers, stage_2_instance, stage_4_instance
-    global stage_5_instance,boss_intro_image, bgm,bgm1
-    bgm1 = load_music('resource/sound/boss_intro.mp3')
+    global stage_5_instance,boss_intro_image, bgm,bgm1,open_s
+    bgm1 = load_wav('resource/sound/boss_intro.mp3')
     bgm1.set_volume(10)
+    open_s = load_wav('resource/sound/door_open.mp3')
+    open_s.set_volume(5)
     try:
         boss_intro_image = load_image('resource/boss_intro.png')
     except:
@@ -96,9 +100,10 @@ def _remove_projectiles():
                 except Exception:
                     pass
 boss_bgm_started = False
+played = False
 def update():
     global stage, stage_index, isaac, host, sucker, stage_3_instance, chargers , stage_2_instance, stage_4_instance
-    global stage_5_instance, boss_intro_timer, bgm,bgm1, boss_bgm_started
+    global stage_5_instance, boss_intro_timer, bgm,bgm1, boss_bgm_started, open_s, played
 
     if boss_intro_timer > 0:
         boss_intro_timer -= game_framework.frame_time
@@ -123,6 +128,9 @@ def update():
         alive_host = [h for h in host if h.hp > 0]
         if len(alive_host) == 0:
             stage.is_cleared = True
+            if played == False:
+                open_s.play(1)
+                played = True
         else:
             stage.is_cleared = False
     elif stage_index == 3:
@@ -131,6 +139,9 @@ def update():
         alive_charger = [c for c in chargers if c.hp > 0]
         if len(alive_sucker) == 0 and len(alive_charger) == 0:
             stage.is_cleared = True
+            if played == False:
+                open_s.play(1)
+                played = True
         else:
             stage.is_cleared = False
     elif stage_index == 1:
@@ -191,6 +202,7 @@ def update():
 
     # Stage_2 -> Stage_1 (돌아갈 때)
     if common.isaac.y < 125 and stage_index == 2 and stage.is_cleared:
+
         _remove_projectiles()
         try:
             if hasattr(stage, 'clear_obstacles'):
@@ -211,6 +223,7 @@ def update():
 
     # Stage_2 -> Stage_3 (진입)
     if common.isaac.y > 750 and stage_index == 2 and stage.is_cleared:
+        played = False
         _remove_projectiles()
         try:
             if hasattr(stage, 'clear_obstacles'):
@@ -308,6 +321,7 @@ def update():
             game_world.add_collision_pair('host:tear', h, None)
 
     if common.isaac.x > 1450 and stage_index == 3 and stage.is_cleared:
+        played = False
         _remove_projectiles()
         try:
             if hasattr(stage, 'clear_obstacles'): stage.clear_obstacles()
@@ -340,6 +354,7 @@ def update():
 
         #Stage_4 -> Stage_3 (왼쪽 문으로 복귀 시)
     if common.isaac.x < 75 and stage_index == 4:
+        played = False
         _remove_projectiles()
         try:
             if hasattr(stage, 'clear_obstacles'): stage.clear_obstacles()

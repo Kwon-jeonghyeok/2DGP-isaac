@@ -97,7 +97,7 @@ class Sucker:
         """game_world에서 제거하고 내부 추적 리스트에서 자신을 제거."""
         try:
             game_world.remove_object(self)
-
+            self.fly_s.stop()
             self.dead_s.play(1)
         except Exception:
             # 이미 제거된 경우 무시
@@ -218,7 +218,7 @@ class Sucker:
             self.fly_s.repeat_play()
             return BehaviorTree.SUCCESS
         else:
-            self.fly_s.stop()
+
             return BehaviorTree.RUNNING
 
     def get_patrol_location(self):

@@ -276,9 +276,7 @@ class Phase2_AttackSpread:
 
         # 마지막 프레임(4)에 도달했고 아직 안 쐈다면 발사
         if idx >= 4 and not boss.fired:
-            spit_s = load_wav('resource/sound/boss_spit.mp3')
-            spit_s.set_volume(5)
-            spit_s.play(1)
+
             # 5발 발사 로직
             start_angle = -math.pi / 2  # -90도 (아래쪽)
             spread_angles = [-45, -20, 0, 20, 45]
@@ -292,6 +290,7 @@ class Phase2_AttackSpread:
             boss.fired = True
 
         # 애니메이션 끝나면 복귀 (5프레임 재생 후)
+
         if idx >= 5:
             boss.change_state(Phase2_MoveLeftRight)
 
@@ -329,10 +328,7 @@ class Phase2_AttackLaser:
         # 6번째(5), 7번째(6) 프레임일 때 레이저 활성화
         if idx == 5 or idx == 6:
             if boss.laser is None:
-                laser = load_wav('resource/sound/boss_laser.mp3')
-                laser.set_volume(5)
 
-                laser.play(1)
                 boss.laser = BossLaser(boss)
                 game_world.add_object(boss.laser, 1)
                 game_world.add_collision_pair('isaac:boss_laser',None , boss.laser)

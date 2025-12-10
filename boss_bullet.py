@@ -18,6 +18,9 @@ class BossBullet:
         self.x, self.y = x, y
         self.speed = 350.0
         self.angle = angle  # 발사 각도 (라디안)
+        self.spit_s = load_wav('resource/sound/boss_spit.mp3')
+        self.spit_s.set_volume(8)
+        self.spit_s.play(1)
 
         # 붉은색 틴트 효과를 위해 (선택사항)
         # self.color = (255, 0, 0)

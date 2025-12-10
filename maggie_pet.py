@@ -27,6 +27,9 @@ class MaggiePet:
                 print("ERROR: Could not load 'resource/objects/maggie_item.png'")
                 MaggiePet.image2 = None
 
+        self.pet_get_s = load_wav('resource/sound/pet_get.mp3')
+        self.pet_get_s.set_volume(5)
+
         self.x, self.y = x, y
         self.state = 'WAITING'
         self.price = 3
@@ -116,6 +119,7 @@ class MaggiePet:
 
                     # 아이작에게 펫 등록
                     common.isaac.pet = self
+                    self.pet_get_s.play(1)
 
                     game_world.remove_collision_object(self)
                     game_world.remove_object(self)

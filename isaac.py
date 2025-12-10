@@ -508,9 +508,9 @@ class Isaac:
         # 장애물(Rock, Poo) 충돌: 최소 보정 + 너무 작은 보정은 무시해서 흔들림 제거
         if group == 'isaac:damage_item':
             # other는 DamageItem 객체
-            self.pet_get_s.play(1)
             if self.coin_count >= other.price:
                 self.coin_count -= other.price
+                self.pet_get_s.play(1)
                 self.damage += 1  # 공격력 증가
 
                 # [핵심 추가] 현재 스테이지에 '팔렸음'을 기록

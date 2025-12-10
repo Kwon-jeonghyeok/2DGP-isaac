@@ -32,10 +32,7 @@ class Stage_5:
             'map_right': 875,
             'map_bottom': 175,
             'map_top': 700,
-            'notches': [
-                # 아래쪽 문 (Stage 4로 돌아가는 문)
-                {'x': 490, 'y': 175, 'w': 50, 'h': 50},
-            ]
+            'notches': []
         }
 
     def update(self):
