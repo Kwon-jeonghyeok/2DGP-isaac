@@ -45,13 +45,13 @@ def init():
     global isaac, stage, stage_index, host, sucker, stage_3_instance, chargers, stage_2_instance, stage_4_instance
     global stage_5_instance,boss_intro_image, bgm,bgm1
     bgm1 = load_music('resource/sound/boss_intro.mp3')
-    bgm1.set_volume(16)
+    bgm1.set_volume(10)
     try:
         boss_intro_image = load_image('resource/boss_intro.png')
     except:
         boss_intro_image = None
     bgm = load_music('resource/sound/base_bgm.mp3')
-    bgm.set_volume(16)
+    bgm.set_volume(5)
     bgm.repeat_play()
 
     stage = Stage_1()
@@ -378,7 +378,7 @@ def update():
     if common.isaac.y > 750 and stage_index == 4:
         bgm.stop()
         bgm = load_music('resource/sound/boss_bgm.mp3')
-        bgm.set_volume(16)
+        bgm.set_volume(5)
 
         boss_bgm_started = False
 
