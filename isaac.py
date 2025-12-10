@@ -150,6 +150,9 @@ class Isaac:
         self.tear_y = 10
         #코인 개수 및 폰트 로드
 
+        self.is_dying = False
+        self.death_timer = 0.0
+
         #self.coin_count = 0
         self.coin_count =30 #초기 코인 개수 테스트용
         try:
@@ -210,6 +213,17 @@ class Isaac:
         )
 
     def update(self):
+        if self.is_dying:
+            self.death_timer += game_framework.frame_time
+            # 2초 후 타이틀로 (애니메이션 1초 + 대기 1초)
+            if self.death_timer > 2.0:
+                self.hp = 0
+            if self.death_timer < 1.0:
+                self.frame = self.death_timer * 3
+            else:
+                self.frame = 2  # 마지막 프레임 고정
+
+            return
         self.prev_x, self.prev_y = self.x, self.y
         self.state_machine.update()
         if self.tear_cooldown > 0.0:
@@ -284,13 +298,30 @@ class Isaac:
             self.y = top
 
     def get_bb(self):
-        return self.x - 30, self.y - 55, self.x + 45, self.y + 20
+        return self.x - 23, self.y - 55, self.x + 40, self.y + 20
 
 
 
     def draw(self):
         self.draw_hp()
         self.draw_coin_ui()
+        if self.is_dying:
+            sx, sy = game_world.world_to_screen(self.x, self.y)
+            frame_idx = int(self.frame)
+            if frame_idx > 2: frame_idx = 2
+
+            # 죽을 때 방향에 맞춰 그리기
+            if self.face_dir == -1:
+                self.image.clip_composite_draw(
+                    frame_idx * 64,620, 64, 47,
+                    0, 'h', sx, sy, 120, 95
+                )
+            else:
+                self.image.clip_draw(
+                    frame_idx * 64,620, 64, 47,
+                    sx, sy, 120, 95
+                )
+            return  # 기존 그리기 건너뜀
         if self.hurt_timer > 0.0:
             if self.hurt_visible:
                 try:
@@ -343,19 +374,18 @@ class Isaac:
 
     def draw_hp(self):
         total_hearts = 5
-        hp = max(0,min(self.max_hp, self.hp))
+        # 죽어가는 중(0.1)에도 HP는 0으로 보이게 처리
+        display_hp = self.hp
+        if self.is_dying: display_hp = 0
+
+        hp = max(0, min(self.max_hp, display_hp))
         cols = 3
         frame_w = int(self.hearts_image.w // cols)
         frame_h = int(self.hearts_image.h)
-
-        start_x = 80
-        start_y = 720
-
-        spacing = frame_w // 6
-        scale = 2
-
+        start_x, start_y = 80, 720
+        spacing, scale = frame_w // 6, 2
         for i in range(total_hearts):
-            heart_hp = max(0,min(2, hp - i * 2))
+            heart_hp = max(0, min(2, hp - i * 2))
             frame_idx = 2 - heart_hp
             sx = frame_idx * frame_w
             dx = start_x + i * (frame_w * scale + spacing)
@@ -372,15 +402,26 @@ class Isaac:
         return self.hp
 
     def take_damage(self, amount):
+        if self.is_dying: return self.hp
         if self.is_invulnerable:
             return self.hp
         old_hp = getattr(self, 'hp', 0)
-        applied = self.change_hp(-abs(int(amount)))
-        if applied < old_hp:
+        potential_hp = old_hp - abs(int(amount))
+        if potential_hp <= 0:
+            self.hp = 0.1  # 0.1로 고정하여 play_mode에서 삭제되는 것 방지
+            self.is_dying = True
+            self.death_timer = 0.0
+            game_world.remove_collision_object(self)  # 충돌 판정 제거
+            print("Isaac started dying animation...")
+            return 0.1
+        self.hp = potential_hp
+
+        if self.hp < old_hp:
             self.is_invulnerable = True
             self.hurt_timer = self.hurt_duration
             self._hurt_blink_acc = 0.0
             self.hurt_visible = True
+        return self.hp
         return applied
     def heal(self, amount):
         return self.change_hp(abs(int(amount)))
@@ -389,7 +430,7 @@ class Isaac:
         return getattr(self, 'hp', 0) <= 0
 
     def handle_event(self, event):
-
+        if self.is_dying: return
         keymap = {
             SDLK_a: 'left',
             SDLK_d: 'right',
@@ -420,6 +461,7 @@ class Isaac:
 
     def handle_collision(self, group, other):
         # 기존 피해 처리: self.take_damage 그대로 유지
+        if self.is_dying: return
 
         if group in ('isaac:host', 'host_bullet:isaac', 'isaac:sucker', 'isaac:charger', 'isaac:lilhaunt', 'isaac:boss',
                      'isaac:boss_bullet'):
