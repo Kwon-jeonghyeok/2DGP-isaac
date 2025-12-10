@@ -44,7 +44,9 @@ class Stage_4:
         # 왼쪽 문 (열린 상태)
         # 좌표: x=100, y=400
         dx, dy = game_world.world_to_screen(100, 400)
-        self.image2.clip_composite_draw(0, 40, 50, 52, 3.14159 / 2, '', dx, dy, 120, 120)
+        self.image2.clip_composite_draw(0, 40, 50, 52, 3.14159 / 2, '', dx-25, dy, 120, 120)
+        self.image2.clip_composite_draw(50, 40, 50, 52, 3.14159 / 2, '', dx-25, dy-35, 130, 120)
+
         ux, uy = game_world.world_to_screen(490, 700)
         # 위쪽 문 그리기
         self.image2.clip_draw(0, 40, 50, 52, ux, uy + 20, 120, 120)

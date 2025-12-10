@@ -3,6 +3,7 @@ import game_world
 import common
 from rock import Rock
 from poo import Poo
+import math
 
 
 class Stage_3:
@@ -77,6 +78,19 @@ class Stage_3:
                 self.image2.clip_composite_draw(0, 40, 50, 52, 0, 'v', dx, dy, 120, 120)
                 dx2, dy2 = game_world.world_to_screen(465, 120)
                 self.image2.clip_composite_draw(50, 0, 50, 52, 0, 'v', dx2, dy2, 130, 120)
+
+            rx, ry = game_world.world_to_screen(1400, 400)
+            # 회전 각도: -90도 (-PI/2) -> 오른쪽 벽을 향함
+            rotation = -math.pi / 2
+            # 프레임 그리기
+            self.image2.clip_composite_draw(0, 40, 50, 52, rotation, '', rx, ry, 120, 120)
+            # 문짝 그리기 (열림/닫힘)
+            if self.is_cleared:
+                # 열림 (검은 구멍)
+                self.image2.clip_composite_draw(50, 40, 50, 52, rotation, '', rx , ry+35, 130, 120)
+            else:
+                # 닫힘 (문짝)
+                self.image2.clip_composite_draw(50, 0, 50, 52, rotation, '', rx , ry+35, 130, 120)
     def ensure_obstacles(self):
         if not self.rocks:
             self._create_rocks_and_poos(initial=(len(self.poos) == 0))

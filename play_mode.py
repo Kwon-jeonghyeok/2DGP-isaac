@@ -311,7 +311,7 @@ def update():
         common.isaac.y = 400
 
         #Stage_4 -> Stage_3 (왼쪽 문으로 복귀 시)
-    if common.isaac.x < 125 and stage_index == 4:
+    if common.isaac.x < 75 and stage_index == 4:
         _remove_projectiles()
         try:
             if hasattr(stage, 'clear_obstacles'): stage.clear_obstacles()
