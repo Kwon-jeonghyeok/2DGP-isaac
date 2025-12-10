@@ -175,8 +175,12 @@ class TransformMoveToCorner:
     def do(boss):
         # 8프레임 애니메이션
         boss.frame += 1.5 * ACTION_PER_TIME * game_framework.frame_time
+        is_anim_finished = False
         if boss.frame >= 7.0:
             boss.frame = 7.0
+            is_anim_finished = True
+
+        is_arrived = False
         # 이동 로직
         dx = boss.target_x - boss.x
         dy = boss.target_y - boss.y
@@ -184,11 +188,12 @@ class TransformMoveToCorner:
 
         if dist < 10:
             boss.x, boss.y = boss.target_x, boss.target_y
-            boss.change_state(Phase2_MoveLeftRight)
+            is_arrived = True
         else:
             boss.x += (dx / dist) * boss.speed * game_framework.frame_time
             boss.y += (dy / dist) * boss.speed * game_framework.frame_time
-
+        if is_arrived and is_anim_finished:
+            boss.change_state(Phase2_MoveLeftRight)
     @staticmethod
     def draw(boss):
         sx, sy = game_world.world_to_screen(boss.x, boss.y)
@@ -266,8 +271,7 @@ class Phase2_AttackSpread:
         if idx >= 4 and not boss.fired:
             # 5발 발사 로직
             start_angle = -math.pi / 2  # -90도 (아래쪽)
-            # -30, -15, 0, +15, +30 도 (라디안 변환)
-            spread_angles = [-30, -15, 0, 15, 30]
+            spread_angles = [-45, -20, 0, 20, 45]
 
             for deg in spread_angles:
                 rad = math.radians(deg) + start_angle
