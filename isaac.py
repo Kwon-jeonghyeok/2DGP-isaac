@@ -29,7 +29,7 @@ def space_down(e):
 
 #아이작 속도
 PIXEL_PER_METER = (10.0 / 0.3)  # 10 pixel 30 cm
-RUN_SPEED_KMPH = 60.0  # Km / Hour
+RUN_SPEED_KMPH = 20.0  # Km / Hour
 RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
 RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
@@ -54,10 +54,6 @@ class Idle:
     def do(self):
         pass
     def draw(self):
-        # 몸통
-        #self.isaac.image.clip_draw(0, 850, 40, 30, self.isaac.x, self.isaac.y - 35, 80, 60)
-        #머리
-        #self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y,90,75)
 
         sx, sy = game_world.world_to_screen(self.isaac.x, self.isaac.y - 35)
         self.isaac.image.clip_draw(0, 850, 40, 30, sx, sy, 80, 60)
@@ -114,15 +110,6 @@ class Walk:
         self.isaac.y += self.isaac.y_dir * RUN_SPEED_PPS * game_framework.frame_time
 
     def draw(self):
-        #if self.isaac.face_dir == 1:  # right
-            #self.isaac.image.clip_draw(int(self.isaac.frame) * 32 , 810, 40, 26, self.isaac.x, self.isaac.y - 35, 80, 52)
-            #self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
-        #elif self.isaac.face_dir == -1:  # left
-            #self.isaac.image.clip_composite_draw(int(self.isaac.frame) * 32, 810, 40, 26,0,'h', self.isaac.x+14, self.isaac.y - 35, 80, 52)
-            #self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
-        #elif self.isaac.face_dir == 0 or self.isaac.face_dir == 2:  #위 아래 애니메이션 동일
-            #self.isaac.image.clip_draw(int(self.isaac.frame) * 32 , 853, 40, 26, self.isaac.x, self.isaac.y - 35, 80, 52)
-            #self.isaac.image.clip_draw(0, 900, 40, 35, self.isaac.x, self.isaac.y, 90, 75)
 
         if self.isaac.face_dir == 1:  # right
             sx, sy = game_world.world_to_screen(self.isaac.x, self.isaac.y - 35)
@@ -183,7 +170,7 @@ class Isaac:
         self.hurt_visible = True
 
 
-        self.tear_reload = 0.3  # 재장전 시간(초)
+        self.tear_reload = 0.5  # 재장전 시간(초)
         self.tear_cooldown = 0.0  # 남은 쿨다운(초)
 
         self.image = load_image('resource/isaac.png')
