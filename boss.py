@@ -160,7 +160,6 @@ class AttackThrow:
 class TransformMoveToCorner:
     @staticmethod
     def enter(boss):
-        print("BOSS PHASE 2: Transform Sequence Start")
         # 우측 상단 목표
         boss.target_x = 800
         boss.target_y = 650

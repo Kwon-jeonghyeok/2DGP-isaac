@@ -136,7 +136,7 @@ class LilHaunt:
     # 외부(보스)에서 상태를 변경하는 메서드
     def start_chase(self):
         self.state = STATE_CHASE
-        print("LilHaunt: Start Chase!")
+        #print("LilHaunt: Start Chase!")
 
     def return_to_boss(self):
         self.state = STATE_RETURN

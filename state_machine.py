@@ -14,10 +14,10 @@ class StateMachine:
                 self.cur_state.exit(state_event)
                 self.next_state.enter(state_event)
                 #현재 상태가 어떤 이벤트에 의해서 다음 상태로 변했는지 정보를 표시한다.
-                print(f'{self.cur_state.__class__.__name__} -{event_to_string(state_event)}--> {self.next_state.__class__.__name__}')
+                #print(f'{self.cur_state.__class__.__name__} -{event_to_string(state_event)}--> {self.next_state.__class__.__name__}')
                 self.cur_state = self.next_state
                 return
-        print(f'처리되지 않은 이벤트 {event_to_string(state_event)}')
+        #print(f'처리되지 않은 이벤트 {event_to_string(state_event)}')
 
     def draw(self):
         self.cur_state.draw()
