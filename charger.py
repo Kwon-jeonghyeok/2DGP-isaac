@@ -28,7 +28,8 @@ class Charger:
     _instances = []
 
     spawn_points = [
-        (800.0, 500.0), (800.0, 400.0), (1200.0, 500.0), (1100.0, 400.0),
+        (1000.0, 500.0), (1000.0, 450.0), (800.0, 500.0), (850.0, 450.0),
+        (900,500) , (950,500), (980,500)
     ]
 
     def __init__(self):
@@ -59,35 +60,34 @@ class Charger:
         self.build_behavior_tree()
 
     def _init_position(self):
-        bounds = self._find_stage_bounds()
-        if bounds:
-            left, right = bounds.get('map_left', 100), bounds.get('map_right', 1475)
-            bottom, top = bounds.get('map_bottom', 175), bounds.get('map_top', 700)
-        else:
-            left, right, bottom, top = 100, 1475, 175, 700
+        candidates = list(Charger.spawn_points)
+        random.shuffle(candidates)
 
-        cx, cy = (left + right) / 2.0, (bottom + top) / 2.0
-        placed = False
-        if Charger.spawn_points:
-            for px, py in Charger.spawn_points:
-                if self._point_free_for_spawn(px, py):
-                    self.x, self.y = px, py
-                    placed = True
-                    break
-        if not placed:
-            self.x, self.y = float(cx), float(cy)
+        # 2. 후보 좌표들을 순회하며 다른 Charger와 겹치지 않는 곳을 찾음
+        for px, py in candidates:
+            if not self._is_overlapping_with_other_charger(px, py):
+                self.x, self.y = px, py
+                return  # 성공하면 종료
 
-    def _point_free_for_spawn(self, px, py):
-        if not self._is_position_safe(px, py):
-            return False
-        la, ba, ra, ta = px - self.size_x, py - self.size_y, px + self.size_x, py + self.size_y
-        for s in Charger._instances:
-            if s is self: continue
-            sl, sb, sr, st = s.get_bb()
-            if not (la > sr or ra < sl or ta < sb or ba > st):
-                return False
-        return True
+        # 3. 만약 모든 자리에 다른 Charger가 있다면, 그냥 첫 번째 후보지에 겹쳐서라도 스폰
+        self.x, self.y = candidates[0]
 
+        # [새로 추가] 다른 Charger와 겹치는지 확인하는 함수
+
+    def _is_overlapping_with_other_charger(self, x, y):
+        la, ba, ra, ta = x - self.size_x, y - self.size_y, x + self.size_x, y + self.size_y
+
+        for other in Charger._instances:
+            # 이미 생성된 Charger들의 충돌박스와 비교
+            if not hasattr(other, 'get_bb'): continue
+
+            l, b, r, t = other.get_bb()
+
+            # AABB 충돌 검사
+            if not (la > r or ra < l or ta < b or ba > t):
+                return True  # 겹침
+
+        return False  # 안 겹침
     def _find_stage_bounds(self):
         if common.stage and hasattr(common.stage, 'get_map_bounds'):
             return common.stage.get_map_bounds()
