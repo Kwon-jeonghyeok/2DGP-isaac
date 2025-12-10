@@ -418,8 +418,8 @@ class Boss:
         self.x, self.y = x, y
         self.width, self.height = FRAME_WIDTH , FRAME_HEIGHT
         self.speed = 150
-        self.max_hp = 20
-        self.hp = 20
+        self.max_hp = 100
+        self.hp = 100
 
         self.is_dying = False
 

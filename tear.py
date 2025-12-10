@@ -54,12 +54,12 @@ class Tear:
             src_y_row1 = src_y_row0 - (frame_h*2)  # 아래로 이동한 행
             src_y = src_y_row0 if frame_index < 4 else src_y_row1
             self.image.clip_draw(src_x, src_y, frame_w, frame_h, sx, sy, 40, 40)
-            #draw_rectangle(*self.get_bb())
 
-        la, ba, ra, ta = self.get_bb()
-        ls, bs = game_world.world_to_screen(la, ba)
-        rs, ts = game_world.world_to_screen(ra, ta)
-        draw_rectangle(ls, bs, rs, ts)
+
+        # la, ba, ra, ta = self.get_bb()
+        # ls, bs = game_world.world_to_screen(la, ba)
+        # rs, ts = game_world.world_to_screen(ra, ta)
+        # draw_rectangle(ls, bs, rs, ts)
     def update(self):
 
         # 이동 중일 때

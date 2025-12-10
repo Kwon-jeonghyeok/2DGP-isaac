@@ -153,10 +153,10 @@ class Sucker:
         else:
             draw_rectangle(sx - 20, sy - 25, sx + 20, sy + 25)
 
-        l, b, r, t = self.get_bb()
-        ls, bs = game_world.world_to_screen(l, b)
-        rs, ts = game_world.world_to_screen(r, t)
-        draw_rectangle(ls, bs, rs, ts)
+        # l, b, r, t = self.get_bb()
+        # ls, bs = game_world.world_to_screen(l, b)
+        # rs, ts = game_world.world_to_screen(r, t)
+        # draw_rectangle(ls, bs, rs, ts)
 
     def handle_collision(self, group, other):
         if group == 'sucker:tear':

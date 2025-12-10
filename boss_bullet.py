@@ -40,7 +40,7 @@ class BossBullet:
             draw_rectangle(sx - 10, sy - 10, sx + 10, sy + 10)
 
         # 디버그
-        draw_rectangle(*self.get_bb_screen())
+        #draw_rectangle(*self.get_bb_screen())
 
     def get_bb(self):
         return self.x - 10, self.y - 10, self.x + 10, self.y + 10

@@ -40,10 +40,10 @@ class Poo:
         else:
             draw_rectangle(sx - self.w / 2, sy - self.h / 2,
                            sx + self.w / 2, sy + self.h / 2)
-        l, b, r, t = self.get_bb()
-        ls, bs = game_world.world_to_screen(l, b)
-        rs, ts = game_world.world_to_screen(r, t)
-        draw_rectangle(ls, bs, rs, ts)
+        # l, b, r, t = self.get_bb()
+        # ls, bs = game_world.world_to_screen(l, b)
+        # rs, ts = game_world.world_to_screen(r, t)
+        # draw_rectangle(ls, bs, rs, ts)
 
     def get_bb(self):
         # 충돌 판정이 비활성화된 경우 0 영역 반환

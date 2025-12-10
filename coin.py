@@ -30,7 +30,7 @@ class Coin:
             draw_rectangle(sx - 15, sy - 15, sx + 15, sy + 15)
 
         # 디버깅용 박스 (필요시 주석 해제)
-        draw_rectangle(*self.get_bb_screen())
+        #draw_rectangle(*self.get_bb_screen())
 
     def get_bb(self):
         return self.x - 15, self.y - 15, self.x + 15, self.y + 15

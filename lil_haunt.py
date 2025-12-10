@@ -102,7 +102,7 @@ class LilHaunt:
         else:
             draw_rectangle(sx - 15, sy - 15, sx + 15, sy + 15)
 
-        draw_rectangle(*self.get_bb_screen())
+        #draw_rectangle(*self.get_bb_screen())
 
     def get_bb(self):
         return self.x - 15, self.y - 15, self.x + 15, self.y + 15
