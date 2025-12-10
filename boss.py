@@ -389,12 +389,18 @@ class Boss:
     image = None
     hp_fill_image = None  # 체력바 채움용
     hp_frame_image = None  # [추가] 체력바 틀 이미지
+    death_image = None
     def __init__(self, x, y):
         if Boss.image is None:
             try:
                 Boss.image = load_image('resource/BOSS/Haunt.png')
             except:
                 Boss.image = None
+        if Boss.death_image is None:
+            try:
+                Boss.death_image = load_image('resource/BOSS/Haunt_death.png')
+            except:
+                Boss.death_image = None
 
         if Boss.hp_fill_image is None:
             try:
@@ -412,8 +418,10 @@ class Boss:
         self.x, self.y = x, y
         self.width, self.height = FRAME_WIDTH , FRAME_HEIGHT
         self.speed = 150
-        self.max_hp = 100
-        self.hp = 100
+        self.max_hp = 20
+        self.hp = 20
+
+        self.is_dying = False
 
         self.dir_x = 1
         self.dir_y = -1
@@ -432,9 +440,35 @@ class Boss:
         self.cur_state.enter(self)
 
     def update(self):
+
+        if self.is_dying:
+            # 6프레임 애니메이션 (속도 조절 가능, 여기선 좀 빠르게)
+            self.frame += 4.0 * game_framework.frame_time
+
+            # 애니메이션 끝났는지 확인 (6장 다 보여주면)
+            if self.frame >= 6.0:
+                self.hp = 0
+                game_world.remove_object(self)
+                game_framework.change_mode(clear_mode)
+            return
         self.cur_state.do(self)
 
     def draw(self):
+        if self.is_dying:
+            sx, sy = game_world.world_to_screen(self.x, self.y)
+            if Boss.death_image:
+                frame_idx = int(self.frame)
+                if frame_idx > 5: frame_idx = 5
+
+                # 이미지가 가로로 6개 연결되어 있음
+                frame_w = Boss.death_image.w // 6
+                frame_h = Boss.death_image.h
+
+                Boss.death_image.clip_draw(
+                    frame_idx * frame_w, 0, frame_w, frame_h,
+                    sx, sy, self.width * 2.5, self.height * 2.5
+                )
+            return
         if self.image:
             self.cur_state.draw(self)
         else:
@@ -475,9 +509,27 @@ class Boss:
         return self.x - self.width / 2 -30, self.y - self.height / 2 -40, self.x + self.width / 2 + 30, self.y + self.height / 2
 
     def handle_collision(self, group, other):
+        if self.is_dying: return
         if group == 'boss:tear':
             damage = getattr(other, 'damage', 1)
-            self.hp -= damage
-            if self.hp <= 0:
-                print("Game Clear!")
-                game_framework.change_mode(clear_mode)
+            potential_hp = self.hp - damage
+
+            # [수정] 0 이하가 될 것 같으면 사망 프로세스 시작
+            if potential_hp <= 0:
+                self.hp = 0.1
+                self.is_dying = True
+                self.frame = 0.0  # 사망 애니메이션용 프레임 초기화
+
+                # 충돌체 제거
+                game_world.remove_collision_object(self)
+
+                # 잡몹 제거
+                for m in self.minions: m.hp = 0
+
+                # 레이저 제거
+                if hasattr(self, 'laser') and self.laser:
+                    game_world.remove_object(self.laser)
+                    self.laser = None
+                return
+
+            self.hp = potential_hp
