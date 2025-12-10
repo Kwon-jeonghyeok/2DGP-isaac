@@ -31,7 +31,7 @@ class Machine:
         self.width = 100
         self.height = 100
 
-        self.price = 3
+        self.price = 2
         self.buy_cooldown = 0.0
 
         self.state = 'IDLE'

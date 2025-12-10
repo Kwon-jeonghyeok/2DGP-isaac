@@ -14,10 +14,6 @@ class Stage_5:
             print("ERROR: Boss_Room.png not found")
             self.image = None
 
-        try:
-            self.image2 = load_image('resource/objects/Door_1.png')
-        except Exception:
-            self.image2 = None
 
         self.is_cleared = False  # 보스를 잡기 전까진 닫혀 있어야 함 (추후 구현)
         self.minions = []  # 스테이지 레벨에서 관리할 리스트
@@ -45,15 +41,6 @@ class Stage_5:
             self.image.composite_draw(0, 'h', 750, 600, 500, 400)
             self.image.composite_draw(0, 'v', 250, 200, 500, 400)
             self.image.composite_draw(0, 'hv', 750, 200, 500, 400)
-
-        # 문 그리기
-        if self.image2:
-            # 아래쪽 문 (삭제 예정)
-
-            dx, dy = game_world.world_to_screen(490, 175)
-
-            self.image2.clip_composite_draw(0, 40, 50, 52, 0, 'v', dx, dy - 20, 120, 120)
-            self.image2.clip_composite_draw(50, 40, 50, 52, 0, 'v', dx + 35, dy - 20, 130, 120)
 
     def ensure_obstacles(self):
         # 보스 생성

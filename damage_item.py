@@ -16,7 +16,7 @@ class DamageItem:
         self.x, self.y = x, y
         self.width = 80
         self.height = 120
-        self.price = 5  # 가격: 5코인
+        self.price = 3
 
     def update(self):
         pass

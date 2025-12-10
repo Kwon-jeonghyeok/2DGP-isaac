@@ -90,7 +90,7 @@ class Stage_3:
                 self.image2.clip_composite_draw(50, 40, 50, 52, rotation, '', rx , ry+35, 130, 120)
             else:
                 # 닫힘 (문짝)
-                self.image2.clip_composite_draw(50, 0, 50, 52, rotation, '', rx , ry+35, 130, 120)
+                self.image2.clip_composite_draw(50, 0, 50, 52, rotation, '', rx+20 , ry+35, 130, 120)
     def ensure_obstacles(self):
         if not self.rocks:
             self._create_rocks_and_poos(initial=(len(self.poos) == 0))

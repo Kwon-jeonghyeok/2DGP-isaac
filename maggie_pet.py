@@ -29,7 +29,7 @@ class MaggiePet:
 
         self.x, self.y = x, y
         self.state = 'WAITING'
-        self.price = 5
+        self.price = 3
         # 충돌 박스 크기 
         self.width, self.height = 40, 40
 
